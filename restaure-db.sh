@@ -3,7 +3,7 @@
 DBHOST="127.0.0.1"
 DBNAME="zabbix"
 DBUSER="root"
-DBPASS="Alsyon78*"
+DBPASS="pwd*"
 
 # Utilitaires
 MYSQLIMPORT="`which mysqlimport`"
