@@ -1,6 +1,6 @@
 import http.client
 
-host = "your-grafana-instance.com"  # Remplace par l'IP si besoin
+host = "192.168.1.7"  # Remplace par l'IP si besoin
 try:
     conn = http.client.HTTPSConnection(host, timeout=5)
     conn.request("GET", "/")
