@@ -1,6 +1,6 @@
-# Gestionnaire ASP.NET Core avec intégration Artifactory
-# Ce script permet de gérer les installations et suppressions des versions ASP.NET Core
-# en utilisant un dépôt Artifactory d'entreprise comme source des packages
+# Manage your ASP.NET Core from Artifactory
+# Install/Uninstall ASP.NET Core 
+
 
 param (
     [Parameter(Mandatory=$false)]
@@ -26,52 +26,50 @@ param (
     
     [Parameter(Mandatory=$false)]
     [switch]$Force = $false
-    
-    # Nous retirons le paramètre Verbose personnalisé car c'est un paramètre commun PowerShell
+
 )
 
-# Fonction pour afficher l'aide
+# Function HELP 
 function Show-Help {
-    Write-Host "Script de gestion des versions ASP.NET Core avec Artifactory" -ForegroundColor Green
+    Write-Host "Management of ASP.NET Core from Artifactory" -ForegroundColor Green
     Write-Host "-------------------------------------------------------" -ForegroundColor Green
-    Write-Host "Utilisation:" -ForegroundColor Yellow
+    Write-Host "Usage:" -ForegroundColor Yellow
     Write-Host "  .\ASPNetCoreManager.ps1 -Action <action> [options]" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "Actions disponibles:" -ForegroundColor Yellow
-    Write-Host "  list        : Liste toutes les versions installées"
-    Write-Host "  listremote  : Liste toutes les versions disponibles dans Artifactory"
-    Write-Host "  install     : Installe une version spécifique depuis Artifactory (requiert -Version)"
-    Write-Host "  uninstall   : Désinstalle une version spécifique (requiert -Version)"
-    Write-Host "  setup       : Configure les informations de connexion à Artifactory"
-    Write-Host "  help        : Affiche cette aide"
+    Write-Host "Actions availables:" -ForegroundColor Yellow
+    Write-Host "  list        : List all versions installed"
+    Write-Host "  listremote  : List all versions available from Artifactory"
+    Write-Host "  install     : Install a version from Artifactory (requiert -Version)"
+    Write-Host "  uninstall   : Uninstall a version (requiert -Version)"
+    Write-Host "  setup       : Mandatory step, configure your access to Artifactory"
+    Write-Host "  help        : Show Help"
     Write-Host ""
-    Write-Host "Options d'Artifactory:" -ForegroundColor Yellow
-    Write-Host "  -ArtifactoryUrl : URL du serveur Artifactory"
-    Write-Host "  -Repository     : Nom du dépôt Artifactory"
-    Write-Host "  -Username       : Nom d'utilisateur pour l'authentification"
-    Write-Host "  -Password       : Mot de passe pour l'authentification"
-    Write-Host "  -ApiToken       : Token API pour l'authentification (alternative à Username/Password)"
+    Write-Host "Artifactory setup:" -ForegroundColor Yellow
+    Write-Host "  -ArtifactoryUrl : Artifactory Link https://artifactory.example.com"
+    Write-Host "  -Repository     : Repository from Artifactory"
+    Write-Host "  -Username       : Username of authentification"
+    Write-Host "  -Password       : Password of authentification"
+    Write-Host "  -ApiToken       : Token API (instead of Username/Password)"
     Write-Host ""
     Write-Host "Exemples:" -ForegroundColor Cyan
-    Write-Host "  .\ASPNetCoreManager.ps1 -Action setup -ArtifactoryUrl https://artifactory.entreprise.com -Repository dotnet-repo -Username user -Password pass"
+    Write-Host "  .\ASPNetCoreManager.ps1 -Action setup -ArtifactoryUrl https://artifactory.example.com -Repository dotnet-repo -Username user -Password pass"
     Write-Host "  .\ASPNetCoreManager.ps1 -Action listremote"
     Write-Host "  .\ASPNetCoreManager.ps1 -Action install -Version 6.0.19"
     Write-Host "  .\ASPNetCoreManager.ps1 -Action uninstall -Version 5.0.17 -Force"
 }
 
-# Fonction pour afficher les messages détaillés
+# Function show help
 function Write-VerboseMessage {
     param (
         [string]$Message
     )
     
-    # Utilisation de $VerbosePreference au lieu de $Verbose
     if ($VerbosePreference -eq 'Continue') {
         Write-Verbose $Message
     }
 }
 
-# Fonction pour charger la configuration
+# Load configuration of authenfication
 function Load-Configuration {
     $configPath = "$env:USERPROFILE\.dotnet-artifactory-config.xml"
     
@@ -80,16 +78,16 @@ function Load-Configuration {
             $config = Import-Clixml -Path $configPath
             return $config
         } catch {
-            Write-Host "Erreur lors du chargement de la configuration: $_" -ForegroundColor Red
+            Write-Host "Error with configuration file loading: $_" -ForegroundColor Red
             return $null
         }
     } else {
-        Write-Host "Aucune configuration trouvée. Veuillez exécuter d'abord l'action 'setup'." -ForegroundColor Yellow
+        Write-Host "Nothing configuration file. Please execute before 'setup'." -ForegroundColor Yellow
         return $null
     }
 }
 
-# Fonction pour sauvegarder la configuration
+# Function to save a configuration setup Artifactory
 function Save-Configuration {
     param (
         [string]$ArtifactoryUrl,
@@ -112,13 +110,13 @@ function Save-Configuration {
     
     try {
         $config | Export-Clixml -Path $configPath -Force
-        Write-Host "Configuration sauvegardée avec succès." -ForegroundColor Green
+        Write-Host "Configuration save successfully." -ForegroundColor Green
     } catch {
-        Write-Host "Erreur lors de la sauvegarde de la configuration: $_" -ForegroundColor Red
+        Write-Host "Error with saving of configuration: $_" -ForegroundColor Red
     }
 }
 
-# Fonction pour configurer Artifactory
+# Function Setup artifcatory
 function Setup-Artifactory {
     param (
         [string]$ArtifactoryUrl,
@@ -129,31 +127,31 @@ function Setup-Artifactory {
     )
     
     if ([string]::IsNullOrEmpty($ArtifactoryUrl)) {
-        $ArtifactoryUrl = Read-Host "Entrez l'URL du serveur Artifactory"
+        $ArtifactoryUrl = Read-Host "Link of Artifactory"
     }
     
     if ([string]::IsNullOrEmpty($Repository)) {
-        $Repository = Read-Host "Entrez le nom du dépôt Artifactory"
+        $Repository = Read-Host "Repository of Artifactory"
     }
     
-    # Si ni ApiToken ni les identifiants ne sont fournis, demander à l'utilisateur sa méthode préférée
+    # If nothing user/pass or token has been fill, asking your preference
     if ([string]::IsNullOrEmpty($ApiToken) -and ([string]::IsNullOrEmpty($Username) -or [string]::IsNullOrEmpty($Password))) {
-        $authMethod = Read-Host "Méthode d'authentification (1 pour Utilisateur/Mot de passe, 2 pour Token API)"
+        $authMethod = Read-Host "Method of authentifcation (1 Username/Password, 2 Token API)"
         
         if ($authMethod -eq "1") {
             if ([string]::IsNullOrEmpty($Username)) {
-                $Username = Read-Host "Entrez votre nom d'utilisateur"
+                $Username = Read-Host "Please enter the username"
             }
             
             if ([string]::IsNullOrEmpty($Password)) {
-                $securePassword = Read-Host "Entrez votre mot de passe" -AsSecureString
+                $securePassword = Read-Host "Please enter the password" -AsSecureString
                 $Password = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword))
             }
             
             $ApiToken = ""
         } else {
             if ([string]::IsNullOrEmpty($ApiToken)) {
-                $secureToken = Read-Host "Entrez votre token API" -AsSecureString
+                $secureToken = Read-Host "Please enter the token API" -AsSecureString
                 $ApiToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken))
             }
             
@@ -165,7 +163,7 @@ function Setup-Artifactory {
     Save-Configuration -ArtifactoryUrl $ArtifactoryUrl -Repository $Repository -Username $Username -Password $Password -ApiToken $ApiToken
     
     # Tester la connexion
-    Write-Host "Test de la connexion à Artifactory..." -ForegroundColor Yellow
+    Write-Host "Check connexion to Artifactory..." -ForegroundColor Yellow
     
     $headers = @{}
     
@@ -182,54 +180,54 @@ function Setup-Artifactory {
         $response = Invoke-WebRequest -Uri $testUrl -Headers $headers -UseBasicParsing
         
         if ($response.StatusCode -eq 200) {
-            Write-Host "Connexion réussie à Artifactory!" -ForegroundColor Green
+            Write-Host "Connexion successfully to Artifactory!" -ForegroundColor Green
         } else {
-            Write-Host "La connexion a échoué. Code de statut: $($response.StatusCode)" -ForegroundColor Red
+            Write-Host "Connexion failed. Statut code: $($response.StatusCode)" -ForegroundColor Red
         }
     } catch {
-        Write-Host "Erreur lors du test de connexion: $_" -ForegroundColor Red
+        Write-Host "Error with testing connexion: $_" -ForegroundColor Red
     }
 }
 
 # Fonction pour lister les versions installées
 function List-InstalledVersions {
-    Write-Host "Versions ASP.NET Core installées:" -ForegroundColor Green
+    Write-Host "Versions ASP.NET Core installed:" -ForegroundColor Green
     Write-Host "---------------------------------------" -ForegroundColor Green
     
     try {
         $dotnetInfo = dotnet --list-sdks
         
         if ($dotnetInfo.Count -eq 0) {
-            Write-Host "Aucune version SDK .NET n'est installée." -ForegroundColor Yellow
+            Write-Host "No version SDK .NET detected." -ForegroundColor Yellow
         } else {
             foreach ($line in $dotnetInfo) {
                 $version = $line.Split(" ")[0]
                 $path = $line.Split(" ")[1].Trim("[", "]")
                 Write-Host "Version: $version" -ForegroundColor Cyan
-                Write-Host "Chemin: $path" -ForegroundColor Gray
+                Write-Host "Path: $path" -ForegroundColor Gray
                 Write-Host ""
             }
         }
         
-        Write-Host "Runtimes ASP.NET Core installés:" -ForegroundColor Green
+        Write-Host "Runtimes ASP.NET Core Installed:" -ForegroundColor Green
         Write-Host "---------------------------------------" -ForegroundColor Green
         
         $dotnetRuntimes = dotnet --list-runtimes | Where-Object { $_ -like "Microsoft.AspNetCore.App*" }
         
         if ($dotnetRuntimes.Count -eq 0) {
-            Write-Host "Aucun runtime ASP.NET Core n'est installé." -ForegroundColor Yellow
+            Write-Host "No runtime ASP.NET Core detected." -ForegroundColor Yellow
         } else {
             foreach ($line in $dotnetRuntimes) {
                 $parts = $line.Split(" ")
                 $version = $parts[1]
                 $path = $parts[2].Trim("[", "]")
                 Write-Host "Version: $version" -ForegroundColor Cyan
-                Write-Host "Chemin: $path" -ForegroundColor Gray
+                Write-Host "Path: $path" -ForegroundColor Gray
                 Write-Host ""
             }
         }
     } catch {
-        Write-Host "Erreur lors de la récupération des versions installées: $_" -ForegroundColor Red
+        Write-Host "Error with versions installed: $_" -ForegroundColor Red
     }
 }
 
@@ -241,7 +239,7 @@ function List-RemoteVersions {
         return
     }
     
-    Write-Host "Récupération des versions ASP.NET Core disponibles dans Artifactory..." -ForegroundColor Green
+    Write-Host "Versions ASP.NET Core available from Artifactory..." -ForegroundColor Green
     
     $headers = @{}
     
@@ -260,11 +258,11 @@ function List-RemoteVersions {
         $response = Invoke-RestMethod -Uri $searchUrl -Headers $headers -UseBasicParsing
         
         if ($response.files.Count -eq 0) {
-            Write-Host "Aucune version trouvée dans le dépôt Artifactory." -ForegroundColor Yellow
+            Write-Host "No versions detected from artifactory." -ForegroundColor Yellow
             return
         }
         
-        Write-Host "Versions SDK .NET disponibles dans Artifactory:" -ForegroundColor Green
+        Write-Host "Versions SDK .NET available from artifactory:" -ForegroundColor Green
         Write-Host "---------------------------------------" -ForegroundColor Green
         
         # Extraire les versions des noms de fichiers
@@ -291,11 +289,11 @@ function List-RemoteVersions {
             Write-Host ""
         }
     } catch {
-        Write-Host "Erreur lors de la récupération des versions disponibles dans Artifactory: $_" -ForegroundColor Red
+        Write-Host "Error with remotelist: $_" -ForegroundColor Red
     }
 }
 
-# Fonction pour télécharger un package depuis Artifactory
+# Function to download a package from Artifactory
 function Download-Package {
     param (
         [string]$PackagePath,
@@ -308,125 +306,125 @@ function Download-Package {
         return $null
     }
     
-    # Créer le répertoire de sortie s'il n'existe pas
+    # Create a folder for download 
     if (-not (Test-Path -Path $OutputPath)) {
-        Write-VerboseMessage "Création du répertoire de sortie: $OutputPath"
+        Write-VerboseMessage "Create a download folder: $OutputPath"
         New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
     }
     
-    # Construire l'URL complète
+    # Build link
     $fullUrl = "$($config.ArtifactoryUrl)/$($config.Repository)/$PackagePath"
-    Write-VerboseMessage "URL de téléchargement: $fullUrl"
+    Write-VerboseMessage "Link of Download: $fullUrl"
     
-    # Préparer les en-têtes pour l'authentification
+    # Head 
     $headers = @{}
     
     if (-not [string]::IsNullOrEmpty($config.ApiToken)) {
-        Write-VerboseMessage "Utilisation de l'authentification par token API"
+        Write-VerboseMessage "Usage from APIToken"
         $headers.Add("X-JFrog-Art-Api", $config.ApiToken)
     } else {
-        Write-VerboseMessage "Utilisation de l'authentification par nom d'utilisateur/mot de passe"
+        Write-VerboseMessage "Usage from username & password"
         $credPair = "$($config.Username):$($config.Password)"
         $encodedCredentials = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($credPair))
         $headers.Add("Authorization", "Basic $encodedCredentials")
     }
     
-    # Obtenir le nom du fichier à partir du chemin
+    # Get file name 
     $fileName = Split-Path -Path $PackagePath -Leaf
     $outputFilePath = Join-Path -Path $OutputPath -ChildPath $fileName
     
     try {
-        Write-Host "Téléchargement du package depuis Artifactory..." -ForegroundColor Green
+        Write-Host "Download from Artifactory..." -ForegroundColor Green
         
         # Télécharger le fichier
-        $progressPreference = 'SilentlyContinue'  # Désactiver la barre de progression pour améliorer les performances
+        $progressPreference = 'SilentlyContinue'  # Deactivate loading
         Invoke-WebRequest -Uri $fullUrl -Headers $headers -OutFile $outputFilePath -UseBasicParsing
-        $progressPreference = 'Continue'  # Réactiver la barre de progression
+        $progressPreference = 'Continue'  # Reactivate loading
         
-        # Vérifier que le fichier a été téléchargé avec succès
+        # Check if the file has been downloaded
         if (Test-Path -Path $outputFilePath) {
             $fileSize = (Get-Item -Path $outputFilePath).Length
             $fileSizeFormatted = "{0:N2} MB" -f ($fileSize / 1MB)
-            Write-Host "Téléchargement réussi: $outputFilePath ($fileSizeFormatted)" -ForegroundColor Green
+            Write-Host "Downloaded Successfully: $outputFilePath ($fileSizeFormatted)" -ForegroundColor Green
             
             return $outputFilePath
         } else {
-            Write-Host "Erreur: Le fichier n'a pas été téléchargé." -ForegroundColor Red
+            Write-Host "Error: Download failed." -ForegroundColor Red
             return $null
         }
     } catch {
         $statusCode = $_.Exception.Response.StatusCode.value__
         
         if ($statusCode -eq 401 -or $statusCode -eq 403) {
-            Write-Host "Erreur d'authentification (code $statusCode): Vérifiez vos identifiants ou votre token." -ForegroundColor Red
+            Write-Host "Error authentication (code $statusCode): Please check the token." -ForegroundColor Red
         } elseif ($statusCode -eq 404) {
-            Write-Host "Erreur 404: Le package n'a pas été trouvé. Vérifiez l'URL et le chemin du package." -ForegroundColor Red
+            Write-Host "Error 404: Please check the package name or the repository name." -ForegroundColor Red
         } else {
-            Write-Host "Erreur lors du téléchargement: $_" -ForegroundColor Red
+            Write-Host "Error of downloading: $_" -ForegroundColor Red
         }
         
         return $null
     }
 }
 
-# Fonction pour installer une version spécifique depuis Artifactory
+# Function installed version from artifactory 
 function Install-Version {
     param (
         [string]$Version
     )
     
     if ([string]::IsNullOrEmpty($Version)) {
-        Write-Host "Vous devez spécifier une version à installer avec le paramètre -Version" -ForegroundColor Red
+        Write-Host "Please push a version number need to be installed -Version" -ForegroundColor Red
         return
     }
     
-    Write-Host "Installation de ASP.NET Core SDK version $Version depuis Artifactory..." -ForegroundColor Green
+    Write-Host "Installation of ASP.NET Core SDK version $Version from Artifactory..." -ForegroundColor Green
     
     try {
-        # Vérification si la version est déjà installée
+        # Check if the version is already installed
         $installedSdks = dotnet --list-sdks
         $isInstalled = $installedSdks | Where-Object { $_ -like "$Version*" }
         
         if ($isInstalled) {
-            Write-Host "La version $Version est déjà installée." -ForegroundColor Yellow
+            Write-Host "version $Version already installed." -ForegroundColor Yellow
             return
         }
         
-        # Télécharger le SDK depuis Artifactory
+        # Downloaded from Artifactory
         $sdkPackagePath = "dotnet-sdk/dotnet-sdk-$Version-win-x64.exe"
         $sdkInstallerPath = Download-Package -PackagePath $sdkPackagePath
         
         if (-not $sdkInstallerPath) {
-            Write-Host "Impossible de télécharger le SDK .NET $Version." -ForegroundColor Red
+            Write-Host "Download failed SDK .NET $Version." -ForegroundColor Red
             return
         }
         
         # Installer le SDK
-        Write-Host "Installation du SDK .NET $Version..." -ForegroundColor Yellow
+        Write-Host "Installation of SDK .NET $Version..." -ForegroundColor Yellow
         $installProcess = Start-Process -FilePath $sdkInstallerPath -ArgumentList "/install", "/quiet", "/norestart" -Wait -PassThru
         
         if ($installProcess.ExitCode -ne 0) {
-            Write-Host "Erreur lors de l'installation du SDK .NET $Version. Code de sortie: $($installProcess.ExitCode)" -ForegroundColor Red
+            Write-Host "Issue: Installation failed of SDK .NET $Version. Code: $($installProcess.ExitCode)" -ForegroundColor Red
             return
         }
         
-        # Télécharger le runtime ASP.NET Core si disponible
+        # Download Runtime if available from Artifactory
         $aspNetPackagePath = "dotnet-runtime/aspnetcore-runtime-$Version-win-x64.exe"
         $aspNetInstallerPath = Download-Package -PackagePath $aspNetPackagePath
         
         if ($aspNetInstallerPath) {
-            Write-Host "Installation du runtime ASP.NET Core $Version..." -ForegroundColor Yellow
+            Write-Host "Installation of runtime ASP.NET Core $Version..." -ForegroundColor Yellow
             $runtimeProcess = Start-Process -FilePath $aspNetInstallerPath -ArgumentList "/install", "/quiet", "/norestart" -Wait -PassThru
             
             if ($runtimeProcess.ExitCode -ne 0) {
-                Write-Host "Avertissement: L'installation du runtime ASP.NET Core a échoué. Code de sortie: $($runtimeProcess.ExitCode)" -ForegroundColor Yellow
+                Write-Host "Issue: Installation failed of runtime ASP.NET Core. Code: $($runtimeProcess.ExitCode)" -ForegroundColor Yellow
             }
         }
         
-        Write-Host "Installation de ASP.NET Core $Version terminée avec succès!" -ForegroundColor Green
-        Write-Host "Veuillez redémarrer votre terminal pour que les changements prennent effet." -ForegroundColor Cyan
+        Write-Host "Installation of ASP.NET Core $Version successfully !" -ForegroundColor Green
+        Write-Host "Please restart the computer." -ForegroundColor Cyan
         
-        # Nettoyage des fichiers temporaires
+        # Cleanup temp files
         if (Test-Path $sdkInstallerPath) {
             Remove-Item $sdkInstallerPath -Force
         }
@@ -435,11 +433,11 @@ function Install-Version {
             Remove-Item $aspNetInstallerPath -Force
         }
     } catch {
-        Write-Host "Erreur lors de l'installation de la version $Version : $_" -ForegroundColor Red
+        Write-Host "Error: Installation failed, please check $Version : $_" -ForegroundColor Red
     }
 }
 
-# Fonction pour désinstaller une version spécifique
+# Fonction uninstall a version 
 function Uninstall-Version {
     param (
         [string]$Version,
@@ -461,15 +459,6 @@ function Uninstall-Version {
         if (-not $isInstalled) {
             Write-Host "La version $Version n'est pas installée." -ForegroundColor Yellow
             return
-        }
-        
-        # Confirmation de la désinstallation
-        if (-not $Force) {
-            $confirmation = Read-Host "Êtes-vous sûr de vouloir désinstaller ASP.NET Core $Version ? (O/N)"
-            if ($confirmation -ne "O" -and $confirmation -ne "o") {
-                Write-Host "Désinstallation annulée." -ForegroundColor Yellow
-                return
-            }
         }
         
         # Utilisation de l'outil de désinstallation Windows
