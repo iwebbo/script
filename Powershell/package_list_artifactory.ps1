@@ -1,5 +1,5 @@
-# Script PowerShell pour lister des packages depuis Artifactory
-# Ce script supporte l'authentification par user/password ou par token API
+# Script PowerShell pour lister des packages depuis Artifactory via l'API storage
+# Ce script utilise "$ArtifactoryUrl/api/storage/$RepositoryName/" comme point d'entrée principal
 
 param (
     [Parameter(Mandatory=$true)]
@@ -21,9 +21,6 @@ param (
     [string]$PackageType = "*",
     
     [Parameter(Mandatory=$false)]
-    [int]$Limit = 100,
-    
-    [Parameter(Mandatory=$false)]
     [switch]$Recursive = $false,
     
     [Parameter(Mandatory=$false)]
@@ -36,10 +33,7 @@ if (-not $ApiToken -and (-not $Username -or -not $Password)) {
     exit 1
 }
 
-# Construction de l'URL de base pour l'API Artifactory
-$baseApiUrl = "$ArtifactoryUrl/api/storage/$RepositoryName"
-
-# Configuration des headers pour l'authentification
+# Construction des headers pour l'authentification
 $headers = @{
     "Accept" = "application/json"
 }
@@ -51,97 +45,144 @@ if ($ApiToken) {
     $headers["Authorization"] = "Basic $base64AuthInfo"
 }
 
-# Fonction pour obtenir les éléments d'un répertoire
-function Get-ArtifactoryItems {
+# Fonction pour lister le contenu d'un chemin via l'API storage
+function Get-ArtifactoryStorageContent {
     param (
         [string]$Path = ""
     )
     
-    $url = if ([string]::IsNullOrEmpty($Path)) { $baseApiUrl } else { "$baseApiUrl/$Path" }
+    $url = "$ArtifactoryUrl/api/storage/$RepositoryName/$Path"
+    $url = $url -replace "//+", "/"  # Éviter les doubles slashes
+    $url = $url -replace ":/", "://"  # Corriger le protocole si nécessaire
     
     try {
         $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
         return $response
     } catch {
-        Write-Error "Erreur lors de la récupération des éléments: $_"
+        Write-Error "Erreur lors de l'accès à $url : $_"
         return $null
     }
 }
 
-# Fonction récursive pour explorer les répertoires
+# Fonction récursive pour parcourir les répertoires
 function Get-ArtifactoryItemsRecursive {
     param (
         [string]$Path = "",
-        [int]$CurrentDepth = 0
+        [System.Collections.ArrayList]$Results
     )
     
-    $response = Get-ArtifactoryItems -Path $Path
+    $response = Get-ArtifactoryStorageContent -Path $Path
     
     if ($null -eq $response) {
         return
     }
     
-    # Traitement du répertoire courant
-    foreach ($child in $response.children) {
-        $fullPath = if ([string]::IsNullOrEmpty($Path)) { $child.uri } else { "$Path$($child.uri)" }
-        
-        # Suppression du slash initial pour l'affichage
-        $displayPath = $fullPath -replace "^/", ""
-        
-        if ($child.folder) {
-            Write-Host "Répertoire: $displayPath"
-            
-            if ($Recursive) {
-                # Appel récursif pour explorer les sous-répertoires
-                Get-ArtifactoryItemsRecursive -Path $fullPath -CurrentDepth ($CurrentDepth + 1)
+    # Si le chemin pointe vers un fichier, ajouter directement ses informations
+    if ($response.PSObject.Properties.Name -contains "downloadUri") {
+        $item = [PSCustomObject]@{
+            Path = $Path
+            Type = "File"
+            Uri = $response.uri
+            Size = $response.size
+            Created = $response.created
+            LastModified = $response.lastModified
+            MimeType = $response.mimeType
+            Checksums = if ($response.checksums) { 
+                "SHA1: $($response.checksums.sha1), MD5: $($response.checksums.md5)"
+            } else {
+                ""
             }
-        } else {
-            # Récupération des informations détaillées sur le fichier
-            $fileInfoUrl = "$ArtifactoryUrl/api/storage/$RepositoryName$fullPath"
-            try {
-                $fileInfo = Invoke-RestMethod -Uri $fileInfoUrl -Headers $headers -Method Get
+        }
+        
+        # Filtrer par type si spécifié
+        if ($PackageType -eq "*" -or $Path -match "\.$PackageType$") {
+            [void]$Results.Add($item)
+        }
+        
+        return
+    }
+    
+    # Si c'est un répertoire, parcourir ses enfants
+    if ($response.PSObject.Properties.Name -contains "children") {
+        foreach ($child in $response.children) {
+            $childPath = if ([string]::IsNullOrEmpty($Path)) { 
+                $child.uri -replace "^/" 
+            } else { 
+                "$Path/$($child.uri)" -replace "^/" 
+            }
+            
+            $childPath = $childPath -replace "/+", "/"  # Normaliser les slashes
+            
+            if ($child.folder) {
+                Write-Verbose "Exploration du répertoire: $childPath"
                 
-                # Création d'un objet personnalisé pour l'affichage
-                $packageInfo = [PSCustomObject]@{
-                    Path = $displayPath
-                    LastModified = $fileInfo.lastModified
-                    Size = [math]::Round($fileInfo.size / 1KB, 2).ToString() + " KB"
-                    SHA1 = $fileInfo.checksums.sha1
-                    MimeType = $fileInfo.mimeType
+                if ($Recursive) {
+                    Get-ArtifactoryItemsRecursive -Path $childPath -Results $Results
                 }
+            } else {
+                # Obtenir les informations détaillées du fichier
+                $fileInfo = Get-ArtifactoryStorageContent -Path $childPath
                 
-                # Filtrage par type si demandé
-                if ($PackageType -eq "*" -or $displayPath -match $PackageType) {
-                    $packageInfo
+                if ($fileInfo) {
+                    $item = [PSCustomObject]@{
+                        Path = $childPath
+                        Type = "File"
+                        Uri = $fileInfo.uri
+                        Size = $fileInfo.size
+                        Created = $fileInfo.created
+                        LastModified = $fileInfo.lastModified
+                        MimeType = $fileInfo.mimeType
+                        Checksums = if ($fileInfo.checksums) { 
+                            "SHA1: $($fileInfo.checksums.sha1), MD5: $($fileInfo.checksums.md5)"
+                        } else {
+                            ""
+                        }
+                    }
+                    
+                    # Filtrer par type si spécifié
+                    if ($PackageType -eq "*" -or $childPath -match "\.$PackageType$") {
+                        [void]$Results.Add($item)
+                    }
                 }
-            } catch {
-                Write-Warning "Impossible d'obtenir les informations détaillées pour $displayPath : $_"
             }
         }
     }
 }
 
-# Fonction principale pour lister les packages
+# Fonction principale
 function List-ArtifactoryPackages {
-    Write-Host "Listing des packages dans le dépôt $RepositoryName sur $ArtifactoryUrl..."
-    Write-Host "Type de package: $PackageType"
+    Write-Host "Listage des packages dans le dépôt $RepositoryName..."
     
-    $packages = Get-ArtifactoryItemsRecursive
-    
-    if ($Limit -gt 0) {
-        $packages = $packages | Select-Object -First $Limit
+    # Vérifier que le dépôt existe
+    $repoCheck = Get-ArtifactoryStorageContent
+    if ($null -eq $repoCheck) {
+        Write-Error "Impossible d'accéder au dépôt $RepositoryName. Vérifiez que le dépôt existe et que vos identifiants sont corrects."
+        return
     }
     
-    # Affichage des résultats à l'écran
-    $packages | Format-Table -AutoSize
+    # Créer une liste pour stocker les résultats
+    $results = [System.Collections.ArrayList]::new()
     
-    # Exportation des résultats vers un fichier si demandé
-    if ($OutputFile) {
-        $packages | Export-Csv -Path $OutputFile -NoTypeInformation
-        Write-Host "Résultats exportés vers $OutputFile"
+    # Parcourir le dépôt de manière récursive si demandé
+    Get-ArtifactoryItemsRecursive -Path "" -Results $results
+    
+    # Afficher les résultats
+    if ($results.Count -eq 0) {
+        Write-Warning "Aucun package trouvé dans le dépôt $RepositoryName avec le filtre '$PackageType'."
+    } else {
+        Write-Host "Nombre total de packages trouvés: $($results.Count)" -ForegroundColor Green
+        
+        # Formater et afficher les résultats
+        $results | Format-Table -Property Path, Size, LastModified -AutoSize
+        
+        # Exporter vers un fichier CSV si demandé
+        if ($OutputFile) {
+            $results | Export-Csv -Path $OutputFile -NoTypeInformation
+            Write-Host "Résultats exportés vers $OutputFile" -ForegroundColor Green
+        }
     }
     
-    Write-Host "Nombre total de packages trouvés: $($packages.Count)"
+    return $results
 }
 
 # Exécution de la fonction principale
