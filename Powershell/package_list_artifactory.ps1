@@ -1,15 +1,15 @@
 # Script PowerShell pour lister des packages depuis Artifactory via l'API search/artifact
-# Version simplifiée avec l'API directe api/search/artifact?name=name&repos=repo-name-search
+# Recherche d'abord par nom d'application, puis raffine par dépôt spécifique si demandé
 
 param (
     [Parameter(Mandatory=$true)]
     [string]$ArtifactoryUrl,
     
     [Parameter(Mandatory=$true)]
-    [string]$RepoNameSearch,
+    [string]$Name,
     
     [Parameter(Mandatory=$false)]
-    [string]$Name = "*",
+    [string]$RepoNameSearch = "",
     
     [Parameter(Mandatory=$false)]
     [string]$Username,
@@ -61,10 +61,20 @@ function Test-ArtifactoryConnection {
     }
 }
 
-# Fonction principale pour rechercher les packages avec le format d'URL spécifié
-function Search-ArtifactoryPackages {
-    # Construire l'URL comme spécifié
-    $url = "$ArtifactoryUrl/api/search/artifact?name=$Name&repos=$RepoNameSearch"
+# Fonction pour rechercher les packages par nom d'application
+function Search-ArtifactoryPackagesByName {
+    param (
+        [string]$AppName,
+        [string]$RepoFilter = ""
+    )
+    
+    # Construire l'URL de base
+    $url = "$ArtifactoryUrl/api/search/artifact?name=$AppName"
+    
+    # Ajouter le filtre de dépôt si spécifié
+    if (-not [string]::IsNullOrEmpty($RepoFilter)) {
+        $url += "&repos=$RepoFilter"
+    }
     
     if ($Verbose) {
         Write-Host "URL de recherche: $url" -ForegroundColor Cyan
@@ -87,7 +97,10 @@ function Search-ArtifactoryPackages {
 
 # Fonction principale
 function List-ArtifactoryPackages {
-    Write-Host "Recherche des packages dans le dépôt '$RepoNameSearch' avec le motif de nom '$Name'..."
+    Write-Host "Recherche des packages avec le nom '$Name'..."
+    if (-not [string]::IsNullOrEmpty($RepoNameSearch)) {
+        Write-Host "Filtré sur le dépôt: '$RepoNameSearch'" -ForegroundColor Yellow
+    }
     
     # Tester la connexion avant de commencer
     if (-not (Test-ArtifactoryConnection)) {
@@ -95,7 +108,7 @@ function List-ArtifactoryPackages {
     }
     
     # Rechercher les packages
-    $packages = Search-ArtifactoryPackages
+    $packages = Search-ArtifactoryPackagesByName -AppName $Name -RepoFilter $RepoNameSearch
     
     # Vérifier les résultats
     if ($null -eq $packages) {
@@ -104,7 +117,7 @@ function List-ArtifactoryPackages {
     }
     
     if ($packages.Count -eq 0) {
-        Write-Warning "Aucun package trouvé pour le dépôt '$RepoNameSearch' avec le motif de nom '$Name'."
+        Write-Warning "Aucun package trouvé avec le nom '$Name'" + $(if (-not [string]::IsNullOrEmpty($RepoNameSearch)) { " dans le dépôt '$RepoNameSearch'" } else { "" })
         return
     }
     
@@ -128,8 +141,13 @@ function List-ArtifactoryPackages {
         $results += $item
     }
     
+    # Afficher un résumé des dépôts trouvés
+    $repoSummary = $results | Group-Object -Property Repository | Select-Object Name, Count | Sort-Object -Property Count -Descending
+    Write-Host "Packages trouvés par dépôt:" -ForegroundColor Cyan
+    $repoSummary | Format-Table -AutoSize
+    
     # Afficher les résultats
-    $results | Format-Table -Property Repository, Path, Name, Type, Size, LastModified -AutoSize
+    $results | Format-Table -Property Repository, Name, Path, Type, Size, LastModified -AutoSize
     
     # Exporter vers un fichier CSV si demandé
     if ($OutputFile) {
