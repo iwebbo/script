@@ -1,5 +1,5 @@
-# Script PowerShell pour interagir avec Artifactory
-# Permet de rechercher et supprimer des packages
+# PowerShell script to interact with Artifactory
+# Allows searching and deleting packages
 
 param (
     [Parameter(Mandatory=$true)]
@@ -27,13 +27,10 @@ param (
     [string]$OutputFile,
     
     [Parameter(Mandatory=$false)]
-    [switch]$UseCurlCommand,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$Verbose
+    [switch]$UseCurlCommand
 )
 
-# Fonctions pour formater les affichages
+# Functions to format display messages
 function Write-InfoMessage {
     param (
         [string]$Message
@@ -62,13 +59,13 @@ function Write-ErrorMessage {
     Write-Host $Message -ForegroundColor Red
 }
 
-# Validation des paramètres
+# Parameter validation
 if ($DeleteMode -and [string]::IsNullOrEmpty($SpecificFile)) {
-    Write-ErrorMessage "Le paramètre -SpecificFile est requis en mode suppression."
+    Write-ErrorMessage "The -SpecificFile parameter is required in delete mode."
     exit 1
 }
 
-# Construction des URL et commandes curl en fonction des paramètres
+# Build URLs and curl commands based on parameters
 function Get-SearchCommand {
     $baseUrl = "$ArtifactoryUrl/api/search/artifact"
     $authPart = "$Username`:$Token"
@@ -83,7 +80,7 @@ function Get-SearchCommand {
         $baseUrl += "?repos=$RepoNameSpecific"
     }
     
-    # Construire la commande curl
+    # Build curl command
     $curlCommand = "curl -ks `"https://$authPart@$($ArtifactoryUrl.Replace('https://', ''))/api/search/artifact"
     
     if (-not [string]::IsNullOrEmpty($PackageSearch)) {
@@ -116,17 +113,39 @@ function Get-DeleteCommand {
     }
 }
 
-# Fonction pour exécuter une recherche avec Invoke-RestMethod
+# Function to convert storage URI to direct file URI
+function Convert-ToDirectFileUri {
+    param (
+        [string]$Uri,
+        [string]$Repo
+    )
+    
+    # Replace /api/storage/ with / to get direct URL to file
+    if ($Uri -match "/api/storage/") {
+        $directUri = $Uri -replace "/api/storage/", "/"
+        
+        # Make sure the URL starts with the ArtifactoryUrl
+        if (-not $directUri.StartsWith($ArtifactoryUrl)) {
+            $directUri = "$ArtifactoryUrl/$Repo/" + ($directUri -replace "^.*?/$Repo/", "")
+        }
+        
+        return $directUri
+    }
+    
+    return $Uri
+}
+
+# Function to execute a search with Invoke-RestMethod
 function Invoke-ArtifactorySearch {
     param (
         [hashtable]$CommandInfo
     )
     
     if ($UseCurlCommand) {
-        Write-InfoMessage "Exécution de la commande curl:"
+        Write-InfoMessage "Executing curl command:"
         Write-Host $CommandInfo.CurlCommand
         
-        # Exécuter curl directement
+        # Execute curl directly
         $result = Invoke-Expression $CommandInfo.CurlCommand
         return $result | ConvertFrom-Json
     } else {
@@ -146,23 +165,23 @@ function Invoke-ArtifactorySearch {
             $response = Invoke-RestMethod -Uri $CommandInfo.Url -Headers $headers -Method Get
             return $response
         } catch {
-            Write-ErrorMessage "Erreur lors de la recherche: $_"
+            Write-ErrorMessage "Error during search: $_"
             return $null
         }
     }
 }
 
-# Fonction pour exécuter une suppression
+# Function to execute a deletion
 function Invoke-ArtifactoryDelete {
     param (
         [hashtable]$CommandInfo
     )
     
     if ($UseCurlCommand) {
-        Write-InfoMessage "Exécution de la commande curl pour suppression:"
+        Write-InfoMessage "Executing curl command for deletion:"
         Write-Host $CommandInfo.CurlCommand
         
-        # Exécuter curl directement
+        # Execute curl directly
         $result = Invoke-Expression $CommandInfo.CurlCommand
         return $result
     } else {
@@ -174,29 +193,29 @@ function Invoke-ArtifactoryDelete {
         $headers["Authorization"] = "Basic $base64AuthInfo"
         
         if ($Verbose) {
-            Write-InfoMessage "URL de suppression: $($CommandInfo.Url)"
+            Write-InfoMessage "Deletion URL: $($CommandInfo.Url)"
         }
         
         try {
             $response = Invoke-RestMethod -Uri $CommandInfo.Url -Headers $headers -Method Delete
             return $response
         } catch {
-            Write-ErrorMessage "Erreur lors de la suppression: $_"
+            Write-ErrorMessage "Error during deletion: $_"
             return $null
         }
     }
 }
 
-# Fonction principale
+# Main function
 function Invoke-ArtifactoryOperation {
     if ($DeleteMode) {
-        # Mode suppression
-        Write-WarningMessage "Mode SUPPRESSION activé pour le fichier: $SpecificFile"
-        Write-WarningMessage "Êtes-vous sûr de vouloir supprimer ce fichier? (O/N)"
+        # Delete mode
+        Write-WarningMessage "DELETE mode activated for file: $SpecificFile"
+        Write-WarningMessage "Are you sure you want to delete this file? (Y/N)"
         $confirmation = Read-Host
         
-        if ($confirmation -ne "O" -and $confirmation -ne "o") {
-            Write-InfoMessage "Opération annulée."
+        if ($confirmation -ne "Y" -and $confirmation -ne "y") {
+            Write-InfoMessage "Operation cancelled."
             return
         }
         
@@ -204,29 +223,29 @@ function Invoke-ArtifactoryOperation {
         $result = Invoke-ArtifactoryDelete -CommandInfo $commandInfo
         
         if ($result) {
-            Write-SuccessMessage "Fichier supprimé avec succès."
+            Write-SuccessMessage "File successfully deleted."
         }
     } else {
-        # Mode recherche
-        Write-InfoMessage "Recherche dans Artifactory"
+        # Search mode
+        Write-InfoMessage "Searching in Artifactory"
         
         if (-not [string]::IsNullOrEmpty($PackageSearch)) {
-            Write-InfoMessage "Package recherché: $PackageSearch"
+            Write-InfoMessage "Package search: $PackageSearch"
         }
         
         if (-not [string]::IsNullOrEmpty($RepoNameSpecific)) {
-            Write-InfoMessage "Dépôt spécifique: $RepoNameSpecific"
+            Write-InfoMessage "Specific repository: $RepoNameSpecific"
         }
         
         $commandInfo = Get-SearchCommand
         $result = Invoke-ArtifactorySearch -CommandInfo $commandInfo
         
         if ($null -eq $result) {
-            Write-WarningMessage "Aucun résultat trouvé ou erreur lors de la recherche."
+            Write-WarningMessage "No results found or error during search."
             return
         }
         
-        # Traiter les résultats
+        # Process results
         if ($result.PSObject.Properties.Name -contains "results") {
             $items = $result.results
         } else {
@@ -236,44 +255,47 @@ function Invoke-ArtifactoryOperation {
         $count = $items.Count
         
         if ($count -eq 0) {
-            Write-WarningMessage "Aucun résultat trouvé pour cette recherche."
+            Write-WarningMessage "No results found for this search."
             return
         }
         
-        Write-SuccessMessage "Nombre de résultats trouvés: $count"
+        Write-SuccessMessage "Number of results found: $count"
         
-        # Créer des objets PowerShell pour les résultats
+        # Create PowerShell objects for results
         $formattedResults = @()
         
         foreach ($item in $items) {
+            # Convert API URI to direct file URI
+            $directUri = Convert-ToDirectFileUri -Uri $item.uri -Repo $item.repo
+            
             $formattedItem = [PSCustomObject]@{
                 Repository = $item.repo
                 Path = $item.path
                 Name = $item.name
-                URI = $item.uri
+                URI = $directUri
                 Type = if ($item.name -match '\.([^\.]+)$') { $matches[1] } else { "Unknown" }
             }
             
             $formattedResults += $formattedItem
         }
         
-        # Afficher un résumé par dépôt
+        # Display summary by repository
         $repoSummary = $formattedResults | Group-Object -Property Repository | Select-Object Name, Count | Sort-Object -Property Count -Descending
-        Write-InfoMessage "Résultats par dépôt:"
+        Write-InfoMessage "Results by repository:"
         $repoSummary | Format-Table -AutoSize
         
-        # Afficher les résultats détaillés
+        # Display detailed results
         $formattedResults | Format-Table -AutoSize
         
-        # Exporter vers un fichier CSV si demandé
+        # Export to CSV if requested
         if ($OutputFile) {
             $formattedResults | Export-Csv -Path $OutputFile -NoTypeInformation -Encoding UTF8
-            Write-SuccessMessage "Résultats exportés vers $OutputFile"
+            Write-SuccessMessage "Results exported to $OutputFile"
         }
         
         return $formattedResults
     }
 }
 
-# Exécution de la fonction principale
+# Execute main function
 Invoke-ArtifactoryOperation
