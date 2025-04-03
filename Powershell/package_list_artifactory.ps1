@@ -1,5 +1,5 @@
 # Script PowerShell pour lister des packages depuis Artifactory via l'API storage
-# Ce script utilise "$ArtifactoryUrl/api/storage/$RepositoryName/" comme point d'entrée principal
+# Avec gestion des timeouts et limites pour éviter les boucles infinies
 
 param (
     [Parameter(Mandatory=$true)]
@@ -24,7 +24,16 @@ param (
     [switch]$Recursive = $false,
     
     [Parameter(Mandatory=$false)]
-    [string]$OutputFile
+    [int]$MaxDepth = 3,
+    
+    [Parameter(Mandatory=$false)]
+    [int]$MaxItems = 1000,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$OutputFile,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$Verbose
 )
 
 # Vérification des paramètres d'authentification
@@ -32,6 +41,9 @@ if (-not $ApiToken -and (-not $Username -or -not $Password)) {
     Write-Error "Vous devez fournir soit un ApiToken, soit un couple Username/Password."
     exit 1
 }
+
+# Configuration du timeout pour les requêtes web (30 secondes)
+$webTimeout = 30
 
 # Construction des headers pour l'authentification
 $headers = @{
@@ -45,32 +57,94 @@ if ($ApiToken) {
     $headers["Authorization"] = "Basic $base64AuthInfo"
 }
 
+# Fonction pour tester la connexion
+function Test-ArtifactoryConnection {
+    try {
+        $url = "$ArtifactoryUrl/api/system/ping"
+        $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get -TimeoutSec $webTimeout
+        Write-Host "Connexion à Artifactory réussie" -ForegroundColor Green
+        return $true
+    } catch {
+        Write-Error "Échec de connexion à Artifactory: $_"
+        return $false
+    }
+}
+
+# Définir un compteur global pour éviter les boucles infinies
+$global:itemCount = 0
+$global:processedPaths = @{}
+
 # Fonction pour lister le contenu d'un chemin via l'API storage
 function Get-ArtifactoryStorageContent {
     param (
         [string]$Path = ""
     )
     
-    $url = "$ArtifactoryUrl/api/storage/$RepositoryName/$Path"
-    $url = $url -replace "//+", "/"  # Éviter les doubles slashes
-    $url = $url -replace ":/", "://"  # Corriger le protocole si nécessaire
+    # Nettoyer le chemin
+    $Path = $Path.TrimStart("/")
+    
+    # Construire l'URL
+    $url = if ([string]::IsNullOrEmpty($Path)) {
+        "$ArtifactoryUrl/api/storage/$RepositoryName"
+    } else {
+        "$ArtifactoryUrl/api/storage/$RepositoryName/$Path"
+    }
+    
+    # Normaliser l'URL
+    $url = $url -replace "([^:])//+", '$1/'
+    
+    if ($Verbose) {
+        Write-Host "Accès à $url" -ForegroundColor Cyan
+    }
     
     try {
-        $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
+        $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get -TimeoutSec $webTimeout
         return $response
     } catch {
-        Write-Error "Erreur lors de l'accès à $url : $_"
+        if ($_.Exception.Response.StatusCode -eq 404) {
+            Write-Warning "Chemin non trouvé: $Path"
+        } else {
+            Write-Error "Erreur lors de l'accès à $url : $($_.Exception.Message)"
+        }
         return $null
     }
 }
 
-# Fonction récursive pour parcourir les répertoires
+# Fonction récursive limitée pour parcourir les répertoires
 function Get-ArtifactoryItemsRecursive {
     param (
         [string]$Path = "",
-        [System.Collections.ArrayList]$Results
+        [System.Collections.ArrayList]$Results,
+        [int]$CurrentDepth = 0
     )
     
+    # Vérifier si on a atteint le nombre maximal d'items
+    if ($global:itemCount -ge $MaxItems) {
+        Write-Warning "Nombre maximal d'items atteint ($MaxItems). Arrêt du traitement."
+        return
+    }
+    
+    # Vérifier la profondeur maximale
+    if ($CurrentDepth -gt $MaxDepth) {
+        if ($Verbose) {
+            Write-Host "Profondeur maximale atteinte pour $Path. Arrêt de la récursion." -ForegroundColor Yellow
+        }
+        return
+    }
+    
+    # Vérifier si le chemin a déjà été traité (pour éviter les boucles)
+    $pathKey = $Path.ToLower()
+    if ($global:processedPaths.ContainsKey($pathKey)) {
+        if ($Verbose) {
+            Write-Host "Chemin déjà traité: $Path. Évitement de boucle." -ForegroundColor Yellow
+        }
+        return
+    }
+    
+    # Marquer le chemin comme traité
+    $global:processedPaths[$pathKey] = $true
+    
+    # Obtenir les informations du chemin actuel
     $response = Get-ArtifactoryStorageContent -Path $Path
     
     if ($null -eq $response) {
@@ -79,24 +153,22 @@ function Get-ArtifactoryItemsRecursive {
     
     # Si le chemin pointe vers un fichier, ajouter directement ses informations
     if ($response.PSObject.Properties.Name -contains "downloadUri") {
+        $global:itemCount++
+        
         $item = [PSCustomObject]@{
             Path = $Path
             Type = "File"
-            Uri = $response.uri
-            Size = $response.size
-            Created = $response.created
+            Size = if ($response.size) { [math]::Round($response.size / 1KB, 2).ToString() + " KB" } else { "N/A" }
             LastModified = $response.lastModified
-            MimeType = $response.mimeType
-            Checksums = if ($response.checksums) { 
-                "SHA1: $($response.checksums.sha1), MD5: $($response.checksums.md5)"
-            } else {
-                ""
-            }
         }
         
         # Filtrer par type si spécifié
         if ($PackageType -eq "*" -or $Path -match "\.$PackageType$") {
             [void]$Results.Add($item)
+            
+            if ($Verbose) {
+                Write-Host "Fichier ajouté: $Path" -ForegroundColor Green
+            }
         }
         
         return
@@ -104,44 +176,52 @@ function Get-ArtifactoryItemsRecursive {
     
     # Si c'est un répertoire, parcourir ses enfants
     if ($response.PSObject.Properties.Name -contains "children") {
+        # Pour un suivi visuel de la progression
+        Write-Progress -Activity "Exploration d'Artifactory" -Status "Dossier: $Path" -PercentComplete (($global:itemCount * 100) / [Math]::Max(1, $MaxItems))
+        
+        if ($Verbose) {
+            Write-Host "Exploration du répertoire: $Path (profondeur $CurrentDepth)" -ForegroundColor Cyan
+        }
+        
         foreach ($child in $response.children) {
-            $childPath = if ([string]::IsNullOrEmpty($Path)) { 
-                $child.uri -replace "^/" 
-            } else { 
-                "$Path/$($child.uri)" -replace "^/" 
+            # Vérifier à nouveau le compteur d'items
+            if ($global:itemCount -ge $MaxItems) {
+                Write-Warning "Nombre maximal d'items atteint ($MaxItems). Arrêt du traitement."
+                return
             }
             
-            $childPath = $childPath -replace "/+", "/"  # Normaliser les slashes
+            $childUri = $child.uri -replace "^/"
+            $childPath = if ([string]::IsNullOrEmpty($Path)) { $childUri } else { "$Path/$childUri" }
+            $childPath = $childPath -replace "/+", "/"
             
             if ($child.folder) {
-                Write-Verbose "Exploration du répertoire: $childPath"
-                
                 if ($Recursive) {
-                    Get-ArtifactoryItemsRecursive -Path $childPath -Results $Results
+                    Get-ArtifactoryItemsRecursive -Path $childPath -Results $Results -CurrentDepth ($CurrentDepth + 1)
                 }
             } else {
-                # Obtenir les informations détaillées du fichier
-                $fileInfo = Get-ArtifactoryStorageContent -Path $childPath
+                $global:itemCount++
                 
-                if ($fileInfo) {
-                    $item = [PSCustomObject]@{
-                        Path = $childPath
-                        Type = "File"
-                        Uri = $fileInfo.uri
-                        Size = $fileInfo.size
-                        Created = $fileInfo.created
-                        LastModified = $fileInfo.lastModified
-                        MimeType = $fileInfo.mimeType
-                        Checksums = if ($fileInfo.checksums) { 
-                            "SHA1: $($fileInfo.checksums.sha1), MD5: $($fileInfo.checksums.md5)"
-                        } else {
-                            ""
-                        }
+                $item = [PSCustomObject]@{
+                    Path = $childPath
+                    Type = "File"
+                    Size = "À déterminer"
+                    LastModified = "À déterminer"
+                }
+                
+                # Filtrer par type si spécifié
+                if ($PackageType -eq "*" -or $childPath -match "\.$PackageType$") {
+                    # Obtenir les détails seulement si nécessaire
+                    $fileInfo = Get-ArtifactoryStorageContent -Path $childPath
+                    
+                    if ($fileInfo) {
+                        $item.Size = if ($fileInfo.size) { [math]::Round($fileInfo.size / 1KB, 2).ToString() + " KB" } else { "N/A" }
+                        $item.LastModified = $fileInfo.lastModified
                     }
                     
-                    # Filtrer par type si spécifié
-                    if ($PackageType -eq "*" -or $childPath -match "\.$PackageType$") {
-                        [void]$Results.Add($item)
+                    [void]$Results.Add($item)
+                    
+                    if ($Verbose) {
+                        Write-Host "Fichier ajouté: $childPath" -ForegroundColor Green
                     }
                 }
             }
@@ -151,7 +231,12 @@ function Get-ArtifactoryItemsRecursive {
 
 # Fonction principale
 function List-ArtifactoryPackages {
-    Write-Host "Listage des packages dans le dépôt $RepositoryName..."
+    Write-Host "Listage des packages dans le dépôt $RepositoryName (type: $PackageType)..."
+    
+    # Tester la connexion avant de commencer
+    if (-not (Test-ArtifactoryConnection)) {
+        return
+    }
     
     # Vérifier que le dépôt existe
     $repoCheck = Get-ArtifactoryStorageContent
@@ -160,24 +245,37 @@ function List-ArtifactoryPackages {
         return
     }
     
+    # Informations sur les limites appliquées
+    Write-Host "Limites: Maximum $MaxItems items, profondeur maximale de $MaxDepth" -ForegroundColor Yellow
+    if ($Recursive) {
+        Write-Host "Mode récursif activé" -ForegroundColor Yellow
+    }
+    
+    # Réinitialiser les compteurs globaux
+    $global:itemCount = 0
+    $global:processedPaths = @{}
+    
     # Créer une liste pour stocker les résultats
     $results = [System.Collections.ArrayList]::new()
     
-    # Parcourir le dépôt de manière récursive si demandé
+    # Parcourir le dépôt
     Get-ArtifactoryItemsRecursive -Path "" -Results $results
+    
+    # Arrêter l'indicateur de progression
+    Write-Progress -Activity "Exploration d'Artifactory" -Completed
     
     # Afficher les résultats
     if ($results.Count -eq 0) {
         Write-Warning "Aucun package trouvé dans le dépôt $RepositoryName avec le filtre '$PackageType'."
     } else {
-        Write-Host "Nombre total de packages trouvés: $($results.Count)" -ForegroundColor Green
+        Write-Host "Nombre de packages trouvés: $($results.Count) sur $($global:itemCount) éléments analysés." -ForegroundColor Green
         
         # Formater et afficher les résultats
         $results | Format-Table -Property Path, Size, LastModified -AutoSize
         
         # Exporter vers un fichier CSV si demandé
         if ($OutputFile) {
-            $results | Export-Csv -Path $OutputFile -NoTypeInformation
+            $results | Export-Csv -Path $OutputFile -NoTypeInformation -Encoding UTF8
             Write-Host "Résultats exportés vers $OutputFile" -ForegroundColor Green
         }
     }
