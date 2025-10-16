@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Récapitulatif Pipelines Jenkins</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-7xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold mb-8 text-center">Récapitulatif des Pipelines Jenkins</h1>
+    
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Application A -->
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition">
+        <h2 class="text-xl font-semibold mb-2 text-blue-700">Application A</h2>
+        <p class="text-sm text-gray-500 mb-4">
+          <strong>Description :</strong> Service d'authentification centralisée permettant la gestion des utilisateurs et des rôles.
+        </p>
+
+        <div class="space-y-4">
+          
+          <!-- ENV DEV -->
+          <div class="p-4 bg-blue-50 rounded-lg">
+            <strong class="block mb-2">Environnement : Dev</strong>
+
+            <!-- Liste de pipelines -->
+            <ul class="space-y-2 text-sm text-gray-700">
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appA-dev-build/" target="_blank" class="text-blue-600 hover:underline font-medium">appA-dev-build</a><br>
+                <span class="ml-5 text-gray-600">Build principal, exécute tests unitaires et analyse SonarQube.</span>
+              </li>
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appA-dev-deploy/" target="_blank" class="text-blue-600 hover:underline font-medium">appA-dev-deploy</a><br>
+                <span class="ml-5 text-gray-600">Déploie automatiquement sur l'environnement de développement.</span>
+              </li>
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appA-dev-lint/" target="_blank" class="text-blue-600 hover:underline font-medium">appA-dev-lint</a><br>
+                <span class="ml-5 text-gray-600">Vérifie la qualité du code et la conformité des dépendances.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- ENV RECETTE -->
+          <div class="p-4 bg-blue-50 rounded-lg">
+            <strong class="block mb-2">Environnement : Recette</strong>
+
+            <ul class="space-y-2 text-sm text-gray-700">
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appA-rec-package/" target="_blank" class="text-blue-600 hover:underline font-medium">appA-rec-package</a><br>
+                <span class="ml-5 text-gray-600">Prépare et empaquette les livrables pour tests fonctionnels.</span>
+              </li>
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appA-rec-deploy/" target="_blank" class="text-blue-600 hover:underline font-medium">appA-rec-deploy</a><br>
+                <span class="ml-5 text-gray-600">Déploie les artefacts sur l’environnement de recette pour validation métier.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- ENV PROD -->
+          <div class="p-4 bg-blue-50 rounded-lg">
+            <strong class="block mb-2">Environnement : Prod</strong>
+
+            <ul class="space-y-2 text-sm text-gray-700">
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appA-prod-release/" target="_blank" class="text-blue-600 hover:underline font-medium">appA-prod-release</a><br>
+                <span class="ml-5 text-gray-600">Taggage Git, génération du changelog et déploiement sur production.</span>
+              </li>
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appA-prod-notify/" target="_blank" class="text-blue-600 hover:underline font-medium">appA-prod-notify</a><br>
+                <span class="ml-5 text-gray-600">Envoi de notifications post-déploiement aux équipes métier et support.</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Application B -->
+      <div class="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl transition">
+        <h2 class="text-xl font-semibold mb-2 text-blue-700">Application B</h2>
+        <p class="text-sm text-gray-500 mb-4">
+          <strong>Description :</strong> API de traitement et validation des commandes clients.
+        </p>
+
+        <div class="space-y-4">
+          <div class="p-4 bg-blue-50 rounded-lg">
+            <strong class="block mb-2">Environnement : Dev</strong>
+            <ul class="space-y-2 text-sm text-gray-700">
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appB-dev-build/" target="_blank" class="text-blue-600 hover:underline font-medium">appB-dev-build</a><br>
+                <span class="ml-5 text-gray-600">Build Maven, tests unitaires et publication de l’image Docker.</span>
+              </li>
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appB-dev-api-tests/" target="_blank" class="text-blue-600 hover:underline font-medium">appB-dev-api-tests</a><br>
+                <span class="ml-5 text-gray-600">Exécution des tests d’intégration sur environnement isolé.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="p-4 bg-blue-50 rounded-lg">
+            <strong class="block mb-2">Environnement : Prod</strong>
+            <ul class="space-y-2 text-sm text-gray-700">
+              <li>
+                🔹 <a href="https://jenkins.example.com/job/appB-prod-release/" target="_blank" class="text-blue-600 hover:underline font-medium">appB-prod-release</a><br>
+                <span class="ml-5 text-gray-600">Pipeline de déploiement continu sur cluster Kubernetes de production.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
