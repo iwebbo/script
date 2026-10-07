@@ -1,0 +1,507 @@
+<!--
+  THEAI - Template Confluence (Storage Format, macros natives)
+  Usage :
+    - Cloud    : créer une page vide > "..." > (éditeur) coller via l'API REST (body.storage) ou l'app "Markup Editor"
+    - REST API : POST /wiki/rest/api/content  { "body": { "storage": { "value": "<contenu>", "representation": "storage" } } }
+    - Data Center : Éditeur > Insérer > Balisage wiki/Storage format (ou API)
+  Remplacer tout ce qui est marqué [À COMPLÉTER].
+-->
+
+<ac:structured-macro ac:name="details" ac:schema-version="1">
+  <ac:rich-text-body>
+    <table>
+      <colgroup><col style="width: 220px;" /><col /></colgroup>
+      <tbody>
+        <tr><th>Projet</th><td>THEAI Monitoring &amp; Vulnerability Platform</td></tr>
+        <tr><th>Statut</th><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Green</ac:parameter><ac:parameter ac:name="title">ACTIF</ac:parameter></ac:structured-macro></td></tr>
+        <tr><th>Environnement</th><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Blue</ac:parameter><ac:parameter ac:name="title">PROD</ac:parameter></ac:structured-macro> <ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Yellow</ac:parameter><ac:parameter ac:name="title">STAGING</ac:parameter></ac:structured-macro></td></tr>
+        <tr><th>Propriétaire</th><td>[À COMPLÉTER : @mention]</td></tr>
+        <tr><th>Équipe support</th><td>[À COMPLÉTER]</td></tr>
+        <tr><th>Version déployée</th><td>[À COMPLÉTER : ex. main-861e063]</td></tr>
+        <tr><th>Dernière revue</th><td><time datetime="2026-10-08" /></td></tr>
+        <tr><th>Dépôt</th><td><a href="https://github.com/iwebbo/THEAI">github.com/iwebbo/THEAI</a></td></tr>
+        <tr><th>Licence</th><td>MIT</td></tr>
+      </tbody>
+    </table>
+  </ac:rich-text-body>
+</ac:structured-macro>
+
+<p style="text-align: center;">
+  <ac:image ac:align="center" ac:width="220"><ri:url ri:value="https://github.com/user-attachments/assets/eeb2491b-34c0-4bf5-84e0-7a3cfa0f36af" /></ac:image>
+</p>
+
+<ac:structured-macro ac:name="info" ac:schema-version="1">
+  <ac:parameter ac:name="title">En une phrase</ac:parameter>
+  <ac:rich-text-body>
+    <p>Application de <strong>supervision de serveurs</strong> et d'<strong>évaluation de vulnérabilités</strong> (React + FastAPI + PostgreSQL). Surveillance temps réel via ICMP, TCP, HTTP/HTTPS et SSH, avec tableau de bord de sécurité.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+
+<ac:structured-macro ac:name="toc" ac:schema-version="1">
+  <ac:parameter ac:name="minLevel">2</ac:parameter>
+  <ac:parameter ac:name="maxLevel">3</ac:parameter>
+  <ac:parameter ac:name="style">none</ac:parameter>
+</ac:structured-macro>
+
+<hr />
+
+<h2>1. Vue d'ensemble</h2>
+
+<ac:layout>
+  <ac:layout-section ac:type="two_equal">
+    <ac:layout-cell>
+      <h3>Monitoring</h3>
+      <ul>
+        <li><strong>ICMP</strong> : connectivité + temps de réponse</li>
+        <li><strong>TCP</strong> : disponibilité sur ports personnalisés</li>
+        <li><strong>HTTP/HTTPS</strong> : ports et chemins personnalisés</li>
+        <li><strong>SSH</strong> : disponibilité du service, authentification supportée</li>
+        <li>Historique des statuts et des temps de réponse</li>
+        <li>Contrôles périodiques à intervalle configurable</li>
+      </ul>
+    </ac:layout-cell>
+    <ac:layout-cell>
+      <h3>Sécurité</h3>
+      <ul>
+        <li><strong>Quick Scan</strong> (synchrone, 5 à 15 s) : ports critiques + TLS</li>
+        <li><strong>Full Scan</strong> (asynchrone) : ports étendus, services, protocoles</li>
+        <li>Niveaux : Critical / High / Medium / Low</li>
+        <li>Recommandations de remédiation par serveur</li>
+        <li>Historique persistant (audit, tendances)</li>
+        <li>Authentification JWT</li>
+      </ul>
+    </ac:layout-cell>
+  </ac:layout-section>
+</ac:layout>
+
+<h3>Captures d'écran</h3>
+<table>
+  <tbody>
+    <tr>
+      <th style="text-align: center;">Connexion</th>
+      <th style="text-align: center;">Dashboard</th>
+    </tr>
+    <tr>
+      <td><ac:image ac:width="480"><ri:url ri:value="https://github.com/user-attachments/assets/cf5a313d-9750-4ebd-8397-0d8d7cfb8ec6" /></ac:image></td>
+      <td><ac:image ac:width="480"><ri:url ri:value="https://github.com/user-attachments/assets/a11d0670-d24f-4526-b6c4-174b4a988d6e" /></ac:image></td>
+    </tr>
+    <tr>
+      <th style="text-align: center;">Vue serveur</th>
+      <th style="text-align: center;">Security Dashboard</th>
+    </tr>
+    <tr>
+      <td><ac:image ac:width="480"><ri:url ri:value="https://github.com/user-attachments/assets/a3206f01-6172-46c6-93fd-eb82a8dbe0c9" /></ac:image></td>
+      <td><ac:image ac:width="480"><ri:url ri:value="https://github.com/user-attachments/assets/6d1ce4a7-312b-43c4-b58d-ef846cd34a43" /></ac:image></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Architecture</h2>
+
+<ac:structured-macro ac:name="code" ac:schema-version="1">
+  <ac:parameter ac:name="title">Flux logique</ac:parameter>
+  <ac:parameter ac:name="language">none</ac:parameter>
+  <ac:plain-text-body><![CDATA[
+ Navigateur ──HTTP:80──▶ Frontend (React, nginx)
+                              │  API_URL
+                              ▼
+                        Backend (FastAPI :8000)
+                         │       │        │
+                         │       │        └──▶ SMTP (alertes e-mail)
+                         │       └───────────▶ Cibles supervisées
+                         │                     (ICMP / TCP / HTTP / SSH)
+                         ▼
+                   PostgreSQL 15 (:5432)
+                   réseau Docker : theai-net
+]]></ac:plain-text-body>
+</ac:structured-macro>
+
+<table>
+  <thead>
+    <tr><th>Composant</th><th>Technologie</th><th>Port</th><th>Image</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Frontend</td><td>React</td><td>80</td><td><code>ghcr.io/iwebbo/theai/frontend:[TAG]</code></td></tr>
+    <tr><td>Backend</td><td>FastAPI (Python)</td><td>8000</td><td><code>ghcr.io/iwebbo/theai/backend:[TAG]</code></td></tr>
+    <tr><td>Base de données</td><td>PostgreSQL 15 (alpine)</td><td>5432</td><td><code>postgres:15-alpine</code></td></tr>
+  </tbody>
+</table>
+
+<h2>3. Prérequis</h2>
+<table>
+  <tbody>
+    <tr><th style="width: 220px;">Logiciel</th><td>Docker et Docker Compose, Git</td></tr>
+    <tr><th>Ressources minimales</th><td>2 Go de RAM, 1 Go de stockage</td></tr>
+    <tr><th>Ports à libérer</th><td>80, 8000, 5432</td></tr>
+    <tr><th>Flux sortants</th><td>SMTP (587) si alertes e-mail, accès aux cibles supervisées</td></tr>
+  </tbody>
+</table>
+
+<h2>4. Installation</h2>
+
+<ac:structured-macro ac:name="tip" ac:schema-version="1">
+  <ac:rich-text-body>
+    <p><strong>Kubernetes (recommandé en production)</strong> : Helm chart et documentation officielle sur <a href="https://iwebbo.github.io/THEAI/">iwebbo.github.io/THEAI</a>.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+
+<h3>4.1 Docker (pas à pas)</h3>
+
+<ol>
+  <li>
+    <p>Cloner le dépôt et créer le réseau :</p>
+    <ac:structured-macro ac:name="code"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[git clone https://github.com/iwebbo/THEAI
+cd THEAI
+docker network create theai-net]]></ac:plain-text-body></ac:structured-macro>
+  </li>
+  <li>
+    <p>Base de données :</p>
+    <ac:structured-macro ac:name="code"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[docker run -d \
+  --name theai-db \
+  --network theai-net \
+  -e POSTGRES_DB=theaidb \
+  -e POSTGRES_USER=theaiuser \
+  -e POSTGRES_PASSWORD='<CHANGE_ME>' \
+  postgres:15-alpine]]></ac:plain-text-body></ac:structured-macro>
+  </li>
+  <li>
+    <p>Backend :</p>
+    <ac:structured-macro ac:name="code"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[docker run -d \
+  --name theai-backend \
+  --network theai-net \
+  --network-alias backend \
+  -p 8000:8000 \
+  -e POSTGRES_SERVER=theai-db \
+  -e POSTGRES_USER=theaiuser \
+  -e POSTGRES_PASSWORD='<CHANGE_ME>' \
+  -e POSTGRES_DB=theaidb \
+  -e POSTGRES_PORT=5432 \
+  -e SMTP_SERVER=smtp.example.com \
+  -e SMTP_PORT=587 \
+  -e SMTP_USERNAME='<SMTP_USER>' \
+  -e SMTP_PASSWORD='<SMTP_PASSWORD>' \
+  -e SMTP_FROM_EMAIL=monitoring@example.com \
+  -e SMTP_USE_TLS=true \
+  -e ENABLE_EMAIL_ALERTS=true \
+  -e ALERT_EMAILS=admin@example.com \
+  -e SECRET_KEY='<GENERATE: openssl rand -hex 32>' \
+  -e ACCESS_TOKEN_EXPIRE_MINUTES=720 \
+  -e DEFAULT_ADMIN_USERNAME=admin \
+  -e DEFAULT_ADMIN_PASSWORD='<CHANGE_ME>' \
+  -e DEFAULT_ADMIN_EMAIL=admin@theai.local \
+  ghcr.io/iwebbo/theai/backend:[TAG]]]></ac:plain-text-body></ac:structured-macro>
+  </li>
+  <li>
+    <p>Frontend :</p>
+    <ac:structured-macro ac:name="code"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[docker run -d \
+  --name theai-frontend \
+  --network theai-net \
+  -p 80:80 \
+  -e API_URL=http://<HOST_BACKEND>:8000 \
+  ghcr.io/iwebbo/theai/frontend:[TAG]]]></ac:plain-text-body></ac:structured-macro>
+  </li>
+  <li><p>Ouvrir <code>http://&lt;HOST&gt;</code> et se connecter avec le compte défini par <code>DEFAULT_ADMIN_*</code>.</p></li>
+</ol>
+
+<ac:structured-macro ac:name="warning" ac:schema-version="1">
+  <ac:parameter ac:name="title">Secrets</ac:parameter>
+  <ac:rich-text-body>
+    <p>Ne jamais commiter ni documenter de vrais mots de passe, <code>SECRET_KEY</code> ou identifiants SMTP. Utiliser un gestionnaire de secrets (Vault, Kubernetes Secrets, Docker secrets).</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+
+<h3>4.2 Variables d'environnement (backend)</h3>
+<table>
+  <thead><tr><th>Variable</th><th>Obligatoire</th><th>Description</th><th>Exemple</th></tr></thead>
+  <tbody>
+    <tr><td><code>POSTGRES_SERVER</code></td><td><ac:emoticon ac:name="tick" /></td><td>Hôte PostgreSQL</td><td><code>theai-db</code></td></tr>
+    <tr><td><code>POSTGRES_PORT</code></td><td><ac:emoticon ac:name="tick" /></td><td>Port PostgreSQL</td><td><code>5432</code></td></tr>
+    <tr><td><code>POSTGRES_DB</code> / <code>POSTGRES_USER</code> / <code>POSTGRES_PASSWORD</code></td><td><ac:emoticon ac:name="tick" /></td><td>Accès base</td><td>-</td></tr>
+    <tr><td><code>SECRET_KEY</code></td><td><ac:emoticon ac:name="tick" /></td><td>Clé de signature JWT</td><td><code>openssl rand -hex 32</code></td></tr>
+    <tr><td><code>ACCESS_TOKEN_EXPIRE_MINUTES</code></td><td><ac:emoticon ac:name="cross" /></td><td>Durée de vie du token</td><td><code>720</code></td></tr>
+    <tr><td><code>DEFAULT_ADMIN_USERNAME</code> / <code>_PASSWORD</code> / <code>_EMAIL</code></td><td><ac:emoticon ac:name="tick" /></td><td>Compte administrateur initial</td><td>-</td></tr>
+    <tr><td><code>ENABLE_EMAIL_ALERTS</code></td><td><ac:emoticon ac:name="cross" /></td><td>Active les alertes e-mail</td><td><code>true</code></td></tr>
+    <tr><td><code>ALERT_EMAILS</code></td><td><ac:emoticon ac:name="cross" /></td><td>Destinataires (séparés par virgule)</td><td>-</td></tr>
+    <tr><td><code>SMTP_SERVER</code>, <code>SMTP_PORT</code>, <code>SMTP_USERNAME</code>, <code>SMTP_PASSWORD</code>, <code>SMTP_FROM_EMAIL</code>, <code>SMTP_USE_TLS</code></td><td><ac:emoticon ac:name="cross" /></td><td>Relais SMTP (requis si alertes actives)</td><td>-</td></tr>
+  </tbody>
+</table>
+
+<ac:structured-macro ac:name="expand" ac:schema-version="1">
+  <ac:parameter ac:name="title">Équivalent Docker Compose (à adapter)</ac:parameter>
+  <ac:rich-text-body>
+    <ac:structured-macro ac:name="code"><ac:parameter ac:name="language">yaml</ac:parameter><ac:plain-text-body><![CDATA[services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: theaidb
+      POSTGRES_USER: theaiuser
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - theai-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    image: ghcr.io/iwebbo/theai/backend:[TAG]
+    depends_on: [db]
+    ports: ["8000:8000"]
+    env_file: .env
+    environment:
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: 5432
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/iwebbo/theai/frontend:[TAG]
+    depends_on: [backend]
+    ports: ["80:80"]
+    environment:
+      API_URL: http://backend:8000
+    restart: unless-stopped
+
+volumes:
+  theai-pgdata:]]></ac:plain-text-body></ac:structured-macro>
+    <p>Note : le <code>docker run</code> de la section 4.1 ne monte aucun volume pour PostgreSQL. Sans volume, les données sont perdues à la suppression du conteneur.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+
+<h2>5. Scan de vulnérabilités</h2>
+
+<table>
+  <thead><tr><th></th><th>Quick Scan</th><th>Full Scan</th></tr></thead>
+  <tbody>
+    <tr><th>Mode</th><td>Synchrone</td><td>Asynchrone (arrière-plan)</td></tr>
+    <tr><th>Durée typique</th><td>5 à 15 s par serveur</td><td>Variable</td></tr>
+    <tr><th>Couverture</th><td>Ports critiques, SSL/TLS</td><td>Ports étendus, services/versions, protocoles</td></tr>
+    <tr><th>Fréquence conseillée</th><td>Toutes les heures</td><td>Hebdomadaire (fenêtre de maintenance)</td></tr>
+    <tr><th>Impact</th><td>Minimal</td><td>Plus intensif</td></tr>
+  </tbody>
+</table>
+
+<h3>5.1 Niveaux de sévérité</h3>
+<table>
+  <thead><tr><th>Niveau</th><th>Impact</th><th>Délai cible</th><th>Exemple</th></tr></thead>
+  <tbody>
+    <tr><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Red</ac:parameter><ac:parameter ac:name="title">CRITICAL</ac:parameter></ac:structured-macro></td><td>Risque de compromission immédiat</td><td>Immédiat</td><td>Service non chiffré dangereux (Telnet)</td></tr>
+    <tr><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Red</ac:parameter><ac:parameter ac:name="title">HIGH</ac:parameter><ac:parameter ac:name="subtle">true</ac:parameter></ac:structured-macro></td><td>Exposition significative</td><td>Sous 7 jours [À COMPLÉTER]</td><td>TLS faible, port base de données exposé</td></tr>
+    <tr><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Yellow</ac:parameter><ac:parameter ac:name="title">MEDIUM</ac:parameter></ac:structured-macro></td><td>Préoccupation modérée</td><td>Prochaine maintenance</td><td>Service obsolète, port inutile ouvert</td></tr>
+    <tr><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Grey</ac:parameter><ac:parameter ac:name="title">LOW</ac:parameter></ac:structured-macro></td><td>Informatif</td><td>Quand possible</td><td>Constat mineur</td></tr>
+  </tbody>
+</table>
+
+<h3>5.2 Ports surveillés</h3>
+<table>
+  <thead><tr><th>Port</th><th>Service</th><th>Risque</th></tr></thead>
+  <tbody>
+    <tr><td>23</td><td>Telnet</td><td>Accès distant non chiffré, obsolète</td></tr>
+    <tr><td>139</td><td>NetBIOS</td><td>Protocole legacy vulnérable</td></tr>
+    <tr><td>445</td><td>SMB</td><td>Vecteur d'attaque courant</td></tr>
+    <tr><td>3389</td><td>RDP</td><td>Cible fréquente de brute-force</td></tr>
+    <tr><td>5900</td><td>VNC</td><td>Authentification faible</td></tr>
+    <tr><td>6379</td><td>Redis</td><td>Souvent mal configuré</td></tr>
+    <tr><td>9200</td><td>Elasticsearch</td><td>Peut exposer des données sensibles</td></tr>
+    <tr><td>27017</td><td>MongoDB</td><td>Souvent exposé sans authentification</td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 Contrôle SSL/TLS</h3>
+<ul>
+  <li>Détection de la version minimale acceptée</li>
+  <li>Signalement des protocoles obsolètes : SSLv2, SSLv3, TLS 1.0, TLS 1.1</li>
+  <li>Validation de la chaîne de certificats</li>
+  <li>Recommandation : TLS 1.2+ avec suites de chiffrement robustes</li>
+</ul>
+
+<h3>5.4 Endpoints de sécurité</h3>
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Rôle</th></tr></thead>
+  <tbody>
+    <tr><td><code>POST</code></td><td><code>/api/v1/security/scan/quick/{server_id}</code></td><td>Quick Scan synchrone</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/v1/security/{server_id}/scan</code></td><td>Lance un Full Scan (retourne un <code>scan_id</code>)</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/scan/{scan_id}</code></td><td>Résultat détaillé d'un scan</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/recommendations/{server_id}</code></td><td>Recommandations du dernier scan</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/vulnerabilities/summary</code></td><td>Synthèse tous serveurs</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/{server_id}/scans?limit=10</code></td><td>Historique des scans</td></tr>
+  </tbody>
+</table>
+
+<h3>5.5 Bonnes pratiques</h3>
+<ol>
+  <li>Quick Scans toutes les heures pour une surveillance continue</li>
+  <li>Full Scans hebdomadaires en fenêtre de maintenance</li>
+  <li>Suivre l'évolution des vulnérabilités dans le dashboard</li>
+  <li>Appliquer rapidement les recommandations</li>
+  <li>Tracer les remédiations (ticket Jira lié)</li>
+  <li>Utiliser les rapports pour les audits et la conformité</li>
+</ol>
+
+<ac:structured-macro ac:name="note" ac:schema-version="1">
+  <ac:parameter ac:name="title">Usage autorisé uniquement</ac:parameter>
+  <ac:rich-text-body>
+    <p>Ne scanner que des systèmes dont vous êtes propriétaire ou pour lesquels vous disposez d'une autorisation écrite.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+
+<h2>6. API</h2>
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Rôle</th></tr></thead>
+  <tbody>
+    <tr><td><code>GET</code></td><td><code>/api/v1/servers</code></td><td>Lister les serveurs</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/v1/servers</code></td><td>Créer un serveur</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/servers/{id}/check</code></td><td>Vérifier un serveur</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/servers/check/all</code></td><td>Vérifier tous les serveurs</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/v1/auth/login</code></td><td>Authentification</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/auth/me</code></td><td>Utilisateur courant</td></tr>
+  </tbody>
+</table>
+<p>Documentation interactive : Swagger UI <code>http://&lt;HOST&gt;:8000/docs</code> et ReDoc <code>http://&lt;HOST&gt;:8000/redoc</code>.</p>
+
+<ac:structured-macro ac:name="expand" ac:schema-version="1">
+  <ac:parameter ac:name="title">Exemple d'appel authentifié</ac:parameter>
+  <ac:rich-text-body>
+    <ac:structured-macro ac:name="code"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[TOKEN=$(curl -s -X POST http://<HOST>:8000/api/v1/auth/login \
+  -d 'username=admin&password=<PASSWORD>' | jq -r .access_token)
+
+curl -s -H "Authorization: Bearer $TOKEN" http://<HOST>:8000/api/v1/servers
+curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  http://<HOST>:8000/api/v1/security/scan/quick/1]]></ac:plain-text-body></ac:structured-macro>
+    <p>Adapter le format du body de login à l'implémentation réelle (form-data OAuth2 ou JSON).</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+
+<h2>7. Sécurité de la plateforme</h2>
+
+<ac:layout>
+  <ac:layout-section ac:type="two_equal">
+    <ac:layout-cell>
+      <ac:structured-macro ac:name="panel">
+        <ac:parameter ac:name="title">En place</ac:parameter>
+        <ac:parameter ac:name="borderColor">#36B37E</ac:parameter>
+        <ac:parameter ac:name="titleBGColor">#E3FCEF</ac:parameter>
+        <ac:rich-text-body>
+          <ul>
+            <li>Validation et assainissement des entrées</li>
+            <li>Protection injection SQL (SQLAlchemy, requêtes paramétrées)</li>
+            <li>CORS configuré</li>
+            <li>Secrets via variables d'environnement</li>
+            <li>Conteneurs non-root, surface d'attaque minimale</li>
+            <li>Authentification JWT</li>
+          </ul>
+        </ac:rich-text-body>
+      </ac:structured-macro>
+    </ac:layout-cell>
+    <ac:layout-cell>
+      <ac:structured-macro ac:name="panel">
+        <ac:parameter ac:name="title">Limites connues</ac:parameter>
+        <ac:parameter ac:name="borderColor">#FF5630</ac:parameter>
+        <ac:parameter ac:name="titleBGColor">#FFEBE6</ac:parameter>
+        <ac:rich-text-body>
+          <ul>
+            <li>Identifiants SSH stockés en base (chiffrement prévu)</li>
+            <li>HTTP uniquement (terminaison TLS requise)</li>
+            <li>Pas de rate limiting</li>
+            <li>Journalisation des événements de sécurité limitée</li>
+          </ul>
+        </ac:rich-text-body>
+      </ac:structured-macro>
+    </ac:layout-cell>
+  </ac:layout-section>
+</ac:layout>
+
+<h3>Checklist de durcissement avant mise en production</h3>
+<ac:task-list>
+  <ac:task><ac:task-id>1</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>Reverse proxy avec terminaison TLS (HTTPS)</ac:task-body></ac:task>
+  <ac:task><ac:task-id>2</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>SECRET_KEY unique et aléatoire, compte admin par défaut changé</ac:task-body></ac:task>
+  <ac:task><ac:task-id>3</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>Segmentation réseau : base non exposée, backend accessible uniquement via le proxy</ac:task-body></ac:task>
+  <ac:task><ac:task-id>4</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>Rate limiting au niveau du proxy (login notamment)</ac:task-body></ac:task>
+  <ac:task><ac:task-id>5</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>Volume persistant et sauvegardes PostgreSQL testées</ac:task-body></ac:task>
+  <ac:task><ac:task-id>6</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>Images épinglées par tag/digest et veille CVE sur les dépendances</ac:task-body></ac:task>
+  <ac:task><ac:task-id>7</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>WAF envisagé si exposition hors réseau interne</ac:task-body></ac:task>
+</ac:task-list>
+
+<h2>8. Exploitation (runbook)</h2>
+
+<table>
+  <thead><tr><th>Opération</th><th>Commande</th></tr></thead>
+  <tbody>
+    <tr><td>Logs backend</td><td><code>docker logs -f theai-backend</code></td></tr>
+    <tr><td>Logs frontend</td><td><code>docker logs -f theai-frontend</code></td></tr>
+    <tr><td>Santé API</td><td><code>curl -f http://&lt;HOST&gt;:8000/docs</code></td></tr>
+    <tr><td>Sauvegarde BDD</td><td><code>docker exec theai-db pg_dump -U theaiuser theaidb &gt; theai-$(date +%F).sql</code></td></tr>
+    <tr><td>Restauration BDD</td><td><code>docker exec -i theai-db psql -U theaiuser theaidb &lt; theai-AAAA-MM-JJ.sql</code></td></tr>
+    <tr><td>Mise à jour</td><td>Changer le tag d'image, <code>docker pull</code>, recréer le conteneur, vérifier les logs</td></tr>
+    <tr><td>Rollback</td><td>Repasser au tag précédent (noter le tag déployé dans la table des propriétés)</td></tr>
+  </tbody>
+</table>
+
+<h2>9. Dépannage</h2>
+
+<ac:structured-macro ac:name="expand"><ac:parameter ac:name="title">Permission refusée pour le ping (ICMP)</ac:parameter><ac:rich-text-body>
+  <p>Sous Linux, autoriser le ping aux utilisateurs non-root :</p>
+  <ac:structured-macro ac:name="code"><ac:parameter ac:name="language">bash</ac:parameter><ac:plain-text-body><![CDATA[sudo sysctl net.ipv4.ping_group_range="0 2000"]]></ac:plain-text-body></ac:structured-macro>
+</ac:rich-text-body></ac:structured-macro>
+
+<ac:structured-macro ac:name="expand"><ac:parameter ac:name="title">Le frontend n'atteint pas l'API</ac:parameter><ac:rich-text-body>
+  <ul>
+    <li>Vérifier <code>API_URL</code> : doit être joignable depuis le navigateur du client, pas seulement depuis le conteneur.</li>
+    <li>Vérifier la configuration CORS du backend.</li>
+    <li>Vérifier que le port 8000 est ouvert.</li>
+  </ul>
+</ac:rich-text-body></ac:structured-macro>
+
+<ac:structured-macro ac:name="expand"><ac:parameter ac:name="title">Le backend ne démarre pas</ac:parameter><ac:rich-text-body>
+  <ul>
+    <li>Consulter <code>docker logs theai-backend</code>.</li>
+    <li>Contrôler <code>POSTGRES_SERVER</code> et le réseau <code>theai-net</code>.</li>
+    <li>Vérifier que la base est démarrée avant le backend.</li>
+  </ul>
+</ac:rich-text-body></ac:structured-macro>
+
+<ac:structured-macro ac:name="expand"><ac:parameter ac:name="title">Les alertes e-mail ne partent pas</ac:parameter><ac:rich-text-body>
+  <ul>
+    <li>Vérifier <code>ENABLE_EMAIL_ALERTS=true</code> et <code>ALERT_EMAILS</code>.</li>
+    <li>Vérifier le flux sortant vers le serveur SMTP (port 587) et <code>SMTP_USE_TLS</code>.</li>
+    <li>Avec Gmail, utiliser un mot de passe d'application.</li>
+  </ul>
+</ac:rich-text-body></ac:structured-macro>
+
+<h2>10. Roadmap</h2>
+<table>
+  <thead><tr><th>Priorité</th><th>Fonctionnalité</th><th>Statut</th></tr></thead>
+  <tbody>
+    <tr><td>Haute</td><td>Protocoles additionnels : FTP, SMTP, DNS</td><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Blue</ac:parameter><ac:parameter ac:name="title">PLANIFIÉ</ac:parameter></ac:structured-macro></td></tr>
+    <tr><td>Haute</td><td>Authentification SSO (SAML, OAuth2, LDAP)</td><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Blue</ac:parameter><ac:parameter ac:name="title">PLANIFIÉ</ac:parameter></ac:structured-macro></td></tr>
+    <tr><td>Moyenne</td><td>Alerting avancé (webhooks)</td><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Grey</ac:parameter><ac:parameter ac:name="title">BACKLOG</ac:parameter></ac:structured-macro></td></tr>
+    <tr><td>Moyenne</td><td>Métriques de performance et tendances</td><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Grey</ac:parameter><ac:parameter ac:name="title">BACKLOG</ac:parameter></ac:structured-macro></td></tr>
+    <tr><td>Moyenne</td><td>Application mobile</td><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Grey</ac:parameter><ac:parameter ac:name="title">BACKLOG</ac:parameter></ac:structured-macro></td></tr>
+    <tr><td>Future</td><td>Insights IA : prédiction et détection d'anomalies</td><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Purple</ac:parameter><ac:parameter ac:name="title">IDÉE</ac:parameter></ac:structured-macro></td></tr>
+    <tr><td>Future</td><td>Rapports de conformité (sécurité, disponibilité)</td><td><ac:structured-macro ac:name="status"><ac:parameter ac:name="colour">Purple</ac:parameter><ac:parameter ac:name="title">IDÉE</ac:parameter></ac:structured-macro></td></tr>
+  </tbody>
+</table>
+
+<h2>11. Historique des versions</h2>
+<table>
+  <thead><tr><th>Date</th><th>Version</th><th>Changements</th><th>Auteur</th></tr></thead>
+  <tbody>
+    <tr><td><time datetime="2026-10-08" /></td><td>[TAG]</td><td>Création de la page</td><td>[À COMPLÉTER]</td></tr>
+  </tbody>
+</table>
+
+<h2>12. Contacts et liens</h2>
+<table>
+  <tbody>
+    <tr><th style="width: 220px;">Propriétaire</th><td>[À COMPLÉTER : @mention]</td></tr>
+    <tr><th>Canal d'incident</th><td>[À COMPLÉTER : #canal Slack/Teams]</td></tr>
+    <tr><th>Tickets</th><td>[À COMPLÉTER : lien Jira, ou macro jira]</td></tr>
+    <tr><th>Dépôt / Issues</th><td><a href="https://github.com/iwebbo/THEAI/issues">github.com/iwebbo/THEAI/issues</a></td></tr>
+    <tr><th>Doc Kubernetes</th><td><a href="https://iwebbo.github.io/THEAI/">iwebbo.github.io/THEAI</a></td></tr>
+  </tbody>
+</table>
+
+<h3>Pages enfants</h3>
+<ac:structured-macro ac:name="children" ac:schema-version="2">
+  <ac:parameter ac:name="all">true</ac:parameter>
+  <ac:parameter ac:name="depth">2</ac:parameter>
+</ac:structured-macro>
+
+<hr />
+<p style="text-align: center;"><em>Conçu pour les administrateurs systèmes et ingénieurs DevOps. Licence MIT.</em></p>

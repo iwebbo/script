@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THEAI - Monitoring &amp; Vulnerability Platform</title>
+<!--
+  Usage Confluence :
+    1. Ouvrir ce fichier dans un navigateur, tout sélectionner (Ctrl+A), copier, puis coller dans l'éditeur Confluence.
+       Titres, tableaux, listes, code, liens et images sont conservés. Les couleurs/CSS avancés peuvent être simplifiés.
+    2. Alternative : Espace > Paramètres > Importer (Data Center) ou l'API REST avec representation "storage"/"editor".
+  Pour des lozenges, panneaux et sommaire natifs, utiliser plutôt la version theai-confluence-storage.xml.
+  Remplacer tout ce qui est marqué [À COMPLÉTER].
+-->
+<style>
+  :root { --brand:#0b5fff; --ink:#172b4d; --muted:#5e6c84; --line:#dfe1e6; --bg:#f4f5f7; }
+  * { box-sizing:border-box; }
+  body { font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--ink); max-width:1000px; margin:2rem auto; padding:0 1.25rem; line-height:1.55; }
+  h1 { font-size:2rem; margin:.5rem 0; }
+  h2 { margin-top:2.4rem; padding-bottom:.35rem; border-bottom:2px solid var(--line); }
+  h3 { margin-top:1.6rem; }
+  table { border-collapse:collapse; width:100%; margin:1rem 0; }
+  th, td { border:1px solid var(--line); padding:.5rem .7rem; text-align:left; vertical-align:top; }
+  th { background:var(--bg); }
+  code { background:var(--bg); padding:.1rem .35rem; border-radius:3px; font-size:.92em; }
+  pre { background:#0d1117; color:#e6edf3; padding:1rem; border-radius:6px; overflow:auto; }
+  pre code { background:none; padding:0; color:inherit; }
+  .hero { text-align:center; }
+  .hero img { max-width:220px; }
+  .callout { border-left:4px solid; padding:.7rem 1rem; margin:1rem 0; border-radius:3px; }
+  .info { background:#deebff; border-color:#0052cc; }
+  .tip { background:#e3fcef; border-color:#00875a; }
+  .warn { background:#fff0b3; border-color:#ff8b00; }
+  .danger { background:#ffebe6; border-color:#de350b; }
+  .lozenge { display:inline-block; font-size:.72rem; font-weight:700; text-transform:uppercase; padding:.1rem .5rem; border-radius:3px; letter-spacing:.03em; }
+  .l-green { background:#e3fcef; color:#006644; }
+  .l-blue { background:#deebff; color:#0747a6; }
+  .l-yellow { background:#fff0b3; color:#172b4d; }
+  .l-red { background:#ffebe6; color:#bf2600; }
+  .l-grey { background:#dfe1e6; color:#42526e; }
+  .l-purple { background:#eae6ff; color:#403294; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  .shots { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .shots figure { margin:0; text-align:center; }
+  .shots img { max-width:100%; border:1px solid var(--line); border-radius:4px; }
+  details { border:1px solid var(--line); border-radius:4px; padding:.5rem .9rem; margin:.6rem 0; }
+  summary { cursor:pointer; font-weight:600; }
+  nav.toc { background:var(--bg); padding:.8rem 1.2rem; border-radius:4px; }
+  nav.toc ol { margin:.3rem 0; columns:2; }
+  @media (max-width:700px){ .cols,.shots{grid-template-columns:1fr;} nav.toc ol{columns:1;} }
+</style>
+</head>
+<body>
+
+<table>
+  <tr><th style="width:220px">Projet</th><td>THEAI Monitoring &amp; Vulnerability Platform</td></tr>
+  <tr><th>Statut</th><td><span class="lozenge l-green">Actif</span></td></tr>
+  <tr><th>Environnement</th><td><span class="lozenge l-blue">Prod</span> <span class="lozenge l-yellow">Staging</span></td></tr>
+  <tr><th>Propriétaire</th><td>[À COMPLÉTER]</td></tr>
+  <tr><th>Équipe support</th><td>[À COMPLÉTER]</td></tr>
+  <tr><th>Version déployée</th><td>[À COMPLÉTER : ex. main-861e063]</td></tr>
+  <tr><th>Dernière revue</th><td>2026-10-08</td></tr>
+  <tr><th>Dépôt</th><td><a href="https://github.com/iwebbo/THEAI">github.com/iwebbo/THEAI</a></td></tr>
+  <tr><th>Licence</th><td>MIT</td></tr>
+</table>
+
+<div class="hero">
+  <img src="https://github.com/user-attachments/assets/eeb2491b-34c0-4bf5-84e0-7a3cfa0f36af" alt="THEAI">
+  <h1>THEAI Monitoring &amp; Vulnerability Platform</h1>
+</div>
+
+<div class="callout info">
+  <strong>En une phrase.</strong> Application de <strong>supervision de serveurs</strong> et d'<strong>évaluation de vulnérabilités</strong> (React + FastAPI + PostgreSQL). Surveillance temps réel via ICMP, TCP, HTTP/HTTPS et SSH, avec tableau de bord de sécurité.
+</div>
+
+<nav class="toc">
+  <strong>Sommaire</strong>
+  <ol>
+    <li><a href="#overview">Vue d'ensemble</a></li>
+    <li><a href="#archi">Architecture</a></li>
+    <li><a href="#prereq">Prérequis</a></li>
+    <li><a href="#install">Installation</a></li>
+    <li><a href="#scan">Scan de vulnérabilités</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="#secu">Sécurité de la plateforme</a></li>
+    <li><a href="#runbook">Exploitation</a></li>
+    <li><a href="#trouble">Dépannage</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#changelog">Historique</a></li>
+    <li><a href="#contacts">Contacts</a></li>
+  </ol>
+</nav>
+
+<h2 id="overview">1. Vue d'ensemble</h2>
+<div class="cols">
+  <div>
+    <h3>Monitoring</h3>
+    <ul>
+      <li><strong>ICMP</strong> : connectivité + temps de réponse</li>
+      <li><strong>TCP</strong> : disponibilité sur ports personnalisés</li>
+      <li><strong>HTTP/HTTPS</strong> : ports et chemins personnalisés</li>
+      <li><strong>SSH</strong> : disponibilité, authentification supportée</li>
+      <li>Historique des statuts et temps de réponse</li>
+      <li>Contrôles périodiques configurables</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Sécurité</h3>
+    <ul>
+      <li><strong>Quick Scan</strong> (synchrone, 5 à 15 s) : ports critiques + TLS</li>
+      <li><strong>Full Scan</strong> (asynchrone) : ports étendus, services, protocoles</li>
+      <li>Niveaux Critical / High / Medium / Low</li>
+      <li>Recommandations de remédiation</li>
+      <li>Historique persistant (audit, tendances)</li>
+      <li>Authentification JWT</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Captures d'écran</h3>
+<div class="shots">
+  <figure><img src="https://github.com/user-attachments/assets/cf5a313d-9750-4ebd-8397-0d8d7cfb8ec6" alt="Connexion"><figcaption>Connexion</figcaption></figure>
+  <figure><img src="https://github.com/user-attachments/assets/a11d0670-d24f-4526-b6c4-174b4a988d6e" alt="Dashboard"><figcaption>Dashboard</figcaption></figure>
+  <figure><img src="https://github.com/user-attachments/assets/a3206f01-6172-46c6-93fd-eb82a8dbe0c9" alt="Vue serveur"><figcaption>Vue serveur</figcaption></figure>
+  <figure><img src="https://github.com/user-attachments/assets/6d1ce4a7-312b-43c4-b58d-ef846cd34a43" alt="Security Dashboard"><figcaption>Security Dashboard</figcaption></figure>
+</div>
+
+<h2 id="archi">2. Architecture</h2>
+<pre><code> Navigateur ──HTTP:80──▶ Frontend (React, nginx)
+                              │  API_URL
+                              ▼
+                        Backend (FastAPI :8000)
+                         │       │        │
+                         │       │        └──▶ SMTP (alertes e-mail)
+                         │       └───────────▶ Cibles supervisées
+                         │                     (ICMP / TCP / HTTP / SSH)
+                         ▼
+                   PostgreSQL 15 (:5432)
+                   réseau Docker : theai-net</code></pre>
+<table>
+  <thead><tr><th>Composant</th><th>Technologie</th><th>Port</th><th>Image</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td>React</td><td>80</td><td><code>ghcr.io/iwebbo/theai/frontend:[TAG]</code></td></tr>
+    <tr><td>Backend</td><td>FastAPI (Python)</td><td>8000</td><td><code>ghcr.io/iwebbo/theai/backend:[TAG]</code></td></tr>
+    <tr><td>Base de données</td><td>PostgreSQL 15 (alpine)</td><td>5432</td><td><code>postgres:15-alpine</code></td></tr>
+  </tbody>
+</table>
+
+<h2 id="prereq">3. Prérequis</h2>
+<table>
+  <tr><th style="width:220px">Logiciel</th><td>Docker et Docker Compose, Git</td></tr>
+  <tr><th>Ressources minimales</th><td>2 Go de RAM, 1 Go de stockage</td></tr>
+  <tr><th>Ports à libérer</th><td>80, 8000, 5432</td></tr>
+  <tr><th>Flux sortants</th><td>SMTP (587) si alertes e-mail, accès aux cibles supervisées</td></tr>
+</table>
+
+<h2 id="install">4. Installation</h2>
+<div class="callout tip">
+  <strong>Kubernetes (recommandé en production)</strong> : Helm chart et documentation sur <a href="https://iwebbo.github.io/THEAI/">iwebbo.github.io/THEAI</a>.
+</div>
+
+<h3>4.1 Docker (pas à pas)</h3>
+<ol>
+  <li>Cloner le dépôt et créer le réseau :
+<pre><code>git clone https://github.com/iwebbo/THEAI
+cd THEAI
+docker network create theai-net</code></pre></li>
+  <li>Base de données :
+<pre><code>docker run -d \
+  --name theai-db \
+  --network theai-net \
+  -e POSTGRES_DB=theaidb \
+  -e POSTGRES_USER=theaiuser \
+  -e POSTGRES_PASSWORD='&lt;CHANGE_ME&gt;' \
+  postgres:15-alpine</code></pre></li>
+  <li>Backend :
+<pre><code>docker run -d \
+  --name theai-backend \
+  --network theai-net \
+  --network-alias backend \
+  -p 8000:8000 \
+  -e POSTGRES_SERVER=theai-db \
+  -e POSTGRES_USER=theaiuser \
+  -e POSTGRES_PASSWORD='&lt;CHANGE_ME&gt;' \
+  -e POSTGRES_DB=theaidb \
+  -e POSTGRES_PORT=5432 \
+  -e SMTP_SERVER=smtp.example.com \
+  -e SMTP_PORT=587 \
+  -e SMTP_USERNAME='&lt;SMTP_USER&gt;' \
+  -e SMTP_PASSWORD='&lt;SMTP_PASSWORD&gt;' \
+  -e SMTP_FROM_EMAIL=monitoring@example.com \
+  -e SMTP_USE_TLS=true \
+  -e ENABLE_EMAIL_ALERTS=true \
+  -e ALERT_EMAILS=admin@example.com \
+  -e SECRET_KEY='&lt;GENERATE: openssl rand -hex 32&gt;' \
+  -e ACCESS_TOKEN_EXPIRE_MINUTES=720 \
+  -e DEFAULT_ADMIN_USERNAME=admin \
+  -e DEFAULT_ADMIN_PASSWORD='&lt;CHANGE_ME&gt;' \
+  -e DEFAULT_ADMIN_EMAIL=admin@theai.local \
+  ghcr.io/iwebbo/theai/backend:[TAG]</code></pre></li>
+  <li>Frontend :
+<pre><code>docker run -d \
+  --name theai-frontend \
+  --network theai-net \
+  -p 80:80 \
+  -e API_URL=http://&lt;HOST_BACKEND&gt;:8000 \
+  ghcr.io/iwebbo/theai/frontend:[TAG]</code></pre></li>
+  <li>Ouvrir <code>http://&lt;HOST&gt;</code> et se connecter avec le compte défini par <code>DEFAULT_ADMIN_*</code>.</li>
+</ol>
+
+<div class="callout warn">
+  <strong>Secrets.</strong> Ne jamais commiter ni documenter de vrais mots de passe, <code>SECRET_KEY</code> ou identifiants SMTP. Utiliser un gestionnaire de secrets (Vault, Kubernetes Secrets, Docker secrets).
+</div>
+
+<h3>4.2 Variables d'environnement (backend)</h3>
+<table>
+  <thead><tr><th>Variable</th><th>Obligatoire</th><th>Description</th><th>Exemple</th></tr></thead>
+  <tbody>
+    <tr><td><code>POSTGRES_SERVER</code></td><td>Oui</td><td>Hôte PostgreSQL</td><td><code>theai-db</code></td></tr>
+    <tr><td><code>POSTGRES_PORT</code></td><td>Oui</td><td>Port PostgreSQL</td><td><code>5432</code></td></tr>
+    <tr><td><code>POSTGRES_DB</code> / <code>_USER</code> / <code>_PASSWORD</code></td><td>Oui</td><td>Accès base</td><td>-</td></tr>
+    <tr><td><code>SECRET_KEY</code></td><td>Oui</td><td>Clé de signature JWT</td><td><code>openssl rand -hex 32</code></td></tr>
+    <tr><td><code>ACCESS_TOKEN_EXPIRE_MINUTES</code></td><td>Non</td><td>Durée de vie du token</td><td><code>720</code></td></tr>
+    <tr><td><code>DEFAULT_ADMIN_USERNAME</code> / <code>_PASSWORD</code> / <code>_EMAIL</code></td><td>Oui</td><td>Compte administrateur initial</td><td>-</td></tr>
+    <tr><td><code>ENABLE_EMAIL_ALERTS</code></td><td>Non</td><td>Active les alertes e-mail</td><td><code>true</code></td></tr>
+    <tr><td><code>ALERT_EMAILS</code></td><td>Non</td><td>Destinataires (séparés par virgule)</td><td>-</td></tr>
+    <tr><td><code>SMTP_*</code></td><td>Non</td><td>Relais SMTP (requis si alertes actives)</td><td>-</td></tr>
+  </tbody>
+</table>
+
+<details>
+  <summary>Équivalent Docker Compose (à adapter)</summary>
+<pre><code>services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: theaidb
+      POSTGRES_USER: theaiuser
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - theai-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    image: ghcr.io/iwebbo/theai/backend:[TAG]
+    depends_on: [db]
+    ports: ["8000:8000"]
+    env_file: .env
+    environment:
+      POSTGRES_SERVER: db
+      POSTGRES_PORT: 5432
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/iwebbo/theai/frontend:[TAG]
+    depends_on: [backend]
+    ports: ["80:80"]
+    environment:
+      API_URL: http://backend:8000
+    restart: unless-stopped
+
+volumes:
+  theai-pgdata:</code></pre>
+  <p>Le <code>docker run</code> de la section 4.1 ne monte aucun volume PostgreSQL : sans volume, les données sont perdues à la suppression du conteneur.</p>
+</details>
+
+<h2 id="scan">5. Scan de vulnérabilités</h2>
+<table>
+  <thead><tr><th></th><th>Quick Scan</th><th>Full Scan</th></tr></thead>
+  <tbody>
+    <tr><th>Mode</th><td>Synchrone</td><td>Asynchrone (arrière-plan)</td></tr>
+    <tr><th>Durée typique</th><td>5 à 15 s par serveur</td><td>Variable</td></tr>
+    <tr><th>Couverture</th><td>Ports critiques, SSL/TLS</td><td>Ports étendus, services/versions, protocoles</td></tr>
+    <tr><th>Fréquence conseillée</th><td>Toutes les heures</td><td>Hebdomadaire (fenêtre de maintenance)</td></tr>
+    <tr><th>Impact</th><td>Minimal</td><td>Plus intensif</td></tr>
+  </tbody>
+</table>
+
+<h3>5.1 Niveaux de sévérité</h3>
+<table>
+  <thead><tr><th>Niveau</th><th>Impact</th><th>Délai cible</th><th>Exemple</th></tr></thead>
+  <tbody>
+    <tr><td><span class="lozenge l-red">Critical</span></td><td>Risque de compromission immédiat</td><td>Immédiat</td><td>Service non chiffré dangereux (Telnet)</td></tr>
+    <tr><td><span class="lozenge l-red">High</span></td><td>Exposition significative</td><td>Sous 7 jours [À COMPLÉTER]</td><td>TLS faible, port base de données exposé</td></tr>
+    <tr><td><span class="lozenge l-yellow">Medium</span></td><td>Préoccupation modérée</td><td>Prochaine maintenance</td><td>Service obsolète, port inutile ouvert</td></tr>
+    <tr><td><span class="lozenge l-grey">Low</span></td><td>Informatif</td><td>Quand possible</td><td>Constat mineur</td></tr>
+  </tbody>
+</table>
+
+<h3>5.2 Ports surveillés</h3>
+<table>
+  <thead><tr><th>Port</th><th>Service</th><th>Risque</th></tr></thead>
+  <tbody>
+    <tr><td>23</td><td>Telnet</td><td>Accès distant non chiffré, obsolète</td></tr>
+    <tr><td>139</td><td>NetBIOS</td><td>Protocole legacy vulnérable</td></tr>
+    <tr><td>445</td><td>SMB</td><td>Vecteur d'attaque courant</td></tr>
+    <tr><td>3389</td><td>RDP</td><td>Cible fréquente de brute-force</td></tr>
+    <tr><td>5900</td><td>VNC</td><td>Authentification faible</td></tr>
+    <tr><td>6379</td><td>Redis</td><td>Souvent mal configuré</td></tr>
+    <tr><td>9200</td><td>Elasticsearch</td><td>Peut exposer des données sensibles</td></tr>
+    <tr><td>27017</td><td>MongoDB</td><td>Souvent exposé sans authentification</td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 Contrôle SSL/TLS</h3>
+<ul>
+  <li>Détection de la version minimale acceptée</li>
+  <li>Signalement des protocoles obsolètes : SSLv2, SSLv3, TLS 1.0, TLS 1.1</li>
+  <li>Validation de la chaîne de certificats</li>
+  <li>Recommandation : TLS 1.2+ avec suites de chiffrement robustes</li>
+</ul>
+
+<h3>5.4 Endpoints de sécurité</h3>
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Rôle</th></tr></thead>
+  <tbody>
+    <tr><td><code>POST</code></td><td><code>/api/v1/security/scan/quick/{server_id}</code></td><td>Quick Scan synchrone</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/v1/security/{server_id}/scan</code></td><td>Lance un Full Scan (retourne un <code>scan_id</code>)</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/scan/{scan_id}</code></td><td>Résultat détaillé d'un scan</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/recommendations/{server_id}</code></td><td>Recommandations du dernier scan</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/vulnerabilities/summary</code></td><td>Synthèse tous serveurs</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/security/{server_id}/scans?limit=10</code></td><td>Historique des scans</td></tr>
+  </tbody>
+</table>
+
+<h3>5.5 Bonnes pratiques</h3>
+<ol>
+  <li>Quick Scans toutes les heures pour une surveillance continue</li>
+  <li>Full Scans hebdomadaires en fenêtre de maintenance</li>
+  <li>Suivre l'évolution des vulnérabilités dans le dashboard</li>
+  <li>Appliquer rapidement les recommandations</li>
+  <li>Tracer les remédiations (ticket Jira lié)</li>
+  <li>Utiliser les rapports pour les audits et la conformité</li>
+</ol>
+
+<div class="callout warn">
+  <strong>Usage autorisé uniquement.</strong> Ne scanner que des systèmes dont vous êtes propriétaire ou pour lesquels vous disposez d'une autorisation écrite.
+</div>
+
+<h2 id="api">6. API</h2>
+<table>
+  <thead><tr><th>Méthode</th><th>Route</th><th>Rôle</th></tr></thead>
+  <tbody>
+    <tr><td><code>GET</code></td><td><code>/api/v1/servers</code></td><td>Lister les serveurs</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/v1/servers</code></td><td>Créer un serveur</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/servers/{id}/check</code></td><td>Vérifier un serveur</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/servers/check/all</code></td><td>Vérifier tous les serveurs</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/v1/auth/login</code></td><td>Authentification</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/v1/auth/me</code></td><td>Utilisateur courant</td></tr>
+  </tbody>
+</table>
+<p>Documentation interactive : Swagger UI <code>http://&lt;HOST&gt;:8000/docs</code> et ReDoc <code>http://&lt;HOST&gt;:8000/redoc</code>.</p>
+<details>
+  <summary>Exemple d'appel authentifié</summary>
+<pre><code>TOKEN=$(curl -s -X POST http://&lt;HOST&gt;:8000/api/v1/auth/login \
+  -d 'username=admin&amp;password=&lt;PASSWORD&gt;' | jq -r .access_token)
+
+curl -s -H "Authorization: Bearer $TOKEN" http://&lt;HOST&gt;:8000/api/v1/servers
+curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  http://&lt;HOST&gt;:8000/api/v1/security/scan/quick/1</code></pre>
+  <p>Adapter le format du body de login à l'implémentation réelle (form-data OAuth2 ou JSON).</p>
+</details>
+
+<h2 id="secu">7. Sécurité de la plateforme</h2>
+<div class="cols">
+  <div class="callout tip">
+    <strong>En place</strong>
+    <ul>
+      <li>Validation et assainissement des entrées</li>
+      <li>Protection injection SQL (SQLAlchemy, requêtes paramétrées)</li>
+      <li>CORS configuré</li>
+      <li>Secrets via variables d'environnement</li>
+      <li>Conteneurs non-root, surface d'attaque minimale</li>
+      <li>Authentification JWT</li>
+    </ul>
+  </div>
+  <div class="callout danger">
+    <strong>Limites connues</strong>
+    <ul>
+      <li>Identifiants SSH stockés en base (chiffrement prévu)</li>
+      <li>HTTP uniquement (terminaison TLS requise)</li>
+      <li>Pas de rate limiting</li>
+      <li>Journalisation des événements de sécurité limitée</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Checklist de durcissement avant mise en production</h3>
+<ul style="list-style:none; padding-left:0">
+  <li>☐ Reverse proxy avec terminaison TLS (HTTPS)</li>
+  <li>☐ SECRET_KEY unique et aléatoire, compte admin par défaut changé</li>
+  <li>☐ Segmentation réseau : base non exposée, backend accessible uniquement via le proxy</li>
+  <li>☐ Rate limiting au niveau du proxy (login notamment)</li>
+  <li>☐ Volume persistant et sauvegardes PostgreSQL testées</li>
+  <li>☐ Images épinglées par tag/digest et veille CVE sur les dépendances</li>
+  <li>☐ WAF envisagé si exposition hors réseau interne</li>
+</ul>
+
+<h2 id="runbook">8. Exploitation (runbook)</h2>
+<table>
+  <thead><tr><th>Opération</th><th>Commande</th></tr></thead>
+  <tbody>
+    <tr><td>Logs backend</td><td><code>docker logs -f theai-backend</code></td></tr>
+    <tr><td>Logs frontend</td><td><code>docker logs -f theai-frontend</code></td></tr>
+    <tr><td>Santé API</td><td><code>curl -f http://&lt;HOST&gt;:8000/docs</code></td></tr>
+    <tr><td>Sauvegarde BDD</td><td><code>docker exec theai-db pg_dump -U theaiuser theaidb &gt; theai-$(date +%F).sql</code></td></tr>
+    <tr><td>Restauration BDD</td><td><code>docker exec -i theai-db psql -U theaiuser theaidb &lt; theai-AAAA-MM-JJ.sql</code></td></tr>
+    <tr><td>Mise à jour</td><td>Changer le tag d'image, <code>docker pull</code>, recréer le conteneur, vérifier les logs</td></tr>
+    <tr><td>Rollback</td><td>Repasser au tag précédent (noter le tag déployé dans la table des propriétés)</td></tr>
+  </tbody>
+</table>
+
+<h2 id="trouble">9. Dépannage</h2>
+<details>
+  <summary>Permission refusée pour le ping (ICMP)</summary>
+  <p>Sous Linux, autoriser le ping aux utilisateurs non-root :</p>
+<pre><code>sudo sysctl net.ipv4.ping_group_range="0 2000"</code></pre>
+</details>
+<details>
+  <summary>Le frontend n'atteint pas l'API</summary>
+  <ul>
+    <li>Vérifier <code>API_URL</code> : doit être joignable depuis le navigateur du client, pas seulement depuis le conteneur.</li>
+    <li>Vérifier la configuration CORS du backend.</li>
+    <li>Vérifier que le port 8000 est ouvert.</li>
+  </ul>
+</details>
+<details>
+  <summary>Le backend ne démarre pas</summary>
+  <ul>
+    <li>Consulter <code>docker logs theai-backend</code>.</li>
+    <li>Contrôler <code>POSTGRES_SERVER</code> et le réseau <code>theai-net</code>.</li>
+    <li>Vérifier que la base est démarrée avant le backend.</li>
+  </ul>
+</details>
+<details>
+  <summary>Les alertes e-mail ne partent pas</summary>
+  <ul>
+    <li>Vérifier <code>ENABLE_EMAIL_ALERTS=true</code> et <code>ALERT_EMAILS</code>.</li>
+    <li>Vérifier le flux sortant vers le SMTP (port 587) et <code>SMTP_USE_TLS</code>.</li>
+    <li>Avec Gmail, utiliser un mot de passe d'application.</li>
+  </ul>
+</details>
+
+<h2 id="roadmap">10. Roadmap</h2>
+<table>
+  <thead><tr><th>Priorité</th><th>Fonctionnalité</th><th>Statut</th></tr></thead>
+  <tbody>
+    <tr><td>Haute</td><td>Protocoles additionnels : FTP, SMTP, DNS</td><td><span class="lozenge l-blue">Planifié</span></td></tr>
+    <tr><td>Haute</td><td>Authentification SSO (SAML, OAuth2, LDAP)</td><td><span class="lozenge l-blue">Planifié</span></td></tr>
+    <tr><td>Moyenne</td><td>Alerting avancé (webhooks)</td><td><span class="lozenge l-grey">Backlog</span></td></tr>
+    <tr><td>Moyenne</td><td>Métriques de performance et tendances</td><td><span class="lozenge l-grey">Backlog</span></td></tr>
+    <tr><td>Moyenne</td><td>Application mobile</td><td><span class="lozenge l-grey">Backlog</span></td></tr>
+    <tr><td>Future</td><td>Insights IA : prédiction et détection d'anomalies</td><td><span class="lozenge l-purple">Idée</span></td></tr>
+    <tr><td>Future</td><td>Rapports de conformité (sécurité, disponibilité)</td><td><span class="lozenge l-purple">Idée</span></td></tr>
+  </tbody>
+</table>
+
+<h2 id="changelog">11. Historique des versions</h2>
+<table>
+  <thead><tr><th>Date</th><th>Version</th><th>Changements</th><th>Auteur</th></tr></thead>
+  <tbody>
+    <tr><td>2026-10-08</td><td>[TAG]</td><td>Création de la page</td><td>[À COMPLÉTER]</td></tr>
+  </tbody>
+</table>
+
+<h2 id="contacts">12. Contacts et liens</h2>
+<table>
+  <tr><th style="width:220px">Propriétaire</th><td>[À COMPLÉTER]</td></tr>
+  <tr><th>Canal d'incident</th><td>[À COMPLÉTER : #canal Slack/Teams]</td></tr>
+  <tr><th>Tickets</th><td>[À COMPLÉTER : lien Jira]</td></tr>
+  <tr><th>Dépôt / Issues</th><td><a href="https://github.com/iwebbo/THEAI/issues">github.com/iwebbo/THEAI/issues</a></td></tr>
+  <tr><th>Doc Kubernetes</th><td><a href="https://iwebbo.github.io/THEAI/">iwebbo.github.io/THEAI</a></td></tr>
+</table>
+
+<hr>
+<p style="text-align:center"><em>Conçu pour les administrateurs systèmes et ingénieurs DevOps. Licence MIT.</em></p>
+
+</body>
+</html>
