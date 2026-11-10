@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Templates terminal colorés - Confluence / Wiki.js</title>
+</head>
+<body style="font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;line-height:1.6;color:#172B4D;max-width:960px;margin:24px auto;padding:0 16px;">
+<!--
+ TEMPLATES TERMINAL COLORES
+ - Chaque template = <div data-block="..."> : copier/coller uniquement ce bloc.
+ - Couleurs = <span style="color:..."> inline (pas de CSS externe, pas de JS, pas de classe).
+ - Fenetre = <table> (pas de flex/grid) ; code = <pre> en pre-wrap (pas de troncature).
+ - Confluence : coller le rendu navigateur dans l'editeur. Fonds sombres et couleurs conserves en general ;
+   si votre instance reecrit les couleurs de fond, utiliser une cellule de tableau avec fond (deja le cas ici).
+ - Wiki.js : page de type HTML (ou Markdown avec HTML autorise).
+ - Pour modifier : remplacer le texte, garder la structure de spans <span style="color:#..."> .
+ Legende couleurs sorties : vert=OK/succes, jaune=warning/changed, rouge=erreur/failed, cyan=info, gris=horodatage/commentaire.
+-->
+<h1 style="font-size:28px;margin:0 0 4px 0;">🖥️ Templates terminal colorés</h1>
+<p style="margin:0 0 16px 0;color:#6B778C;">Bash · Shell · PowerShell · CMD · Groovy · Python · C · Rust · Ansible · Jenkins · kubectl · logs · diff</p>
+<table style="width:100%;border-collapse:collapse;border:1px solid #DFE1E6;"><tr><td style="background:#F4F5F7;padding:8px 12px;border-bottom:1px solid #DFE1E6;"><b>Sommaire</b></td></tr>
+<tr><td style="padding:10px 12px;line-height:2;">
+<a href="#s1" style="color:#0052CC;">1. Sessions interactives (Ubuntu, root, PowerShell, CMD, macOS, Git Bash)</a><br>
+<a href="#s2" style="color:#0052CC;">2. Fichiers sources colorés (bash, sh, powershell, groovy, python, c, rust, yaml)</a><br>
+<a href="#s3" style="color:#0052CC;">3. Sorties d'outils (Jenkins, Ansible, logs, kubectl, diff)</a><br>
+<a href="#s4" style="color:#0052CC;">4. Idées de présentation (succès / échec / warning, one-liner, étapes, placeholders)</a>
+</td></tr></table>
+<h2 id="s1" style="font-size:22px;border-bottom:2px solid #0052CC;padding-bottom:6px;margin-top:40px;">1. Sessions interactives (prompt + commande colorée + sortie)</h2><p style="color:#6B778C;margin-top:0;">Lignes de commande = prompt coloré + syntaxe ; sorties = couleurs sémantiques (vert OK, jaune warning, rouge erreur).</p>
+<h3 style="font-size:16px;margin:22px 0 6px 0;">1.a Ubuntu - Bash (thème aubergine)</h3>
+<div data-block="term-ubuntu-bash" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #2C001E;table-layout:fixed;">
+  <tr><td style="background:#2C001E;color:#DDDDDD;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="width:90px;"></td><td style="text-align:center;color:#DDDDDD;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">user@host: ~/myapp</td><td style="text-align:right;width:90px;white-space:nowrap;color:#E95420;font-size:14px;">● ● ●</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#300A24;"><pre style="margin:0;padding:12px;background:#300A24;color:#EEEEEC;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#8AE234;">user@host</span>:<span style="color:#729FCF;">~/myapp</span>$ <span style="color:#AD7FA8;">cd</span> ~/myapp &amp;&amp; git status <span style="color:#FCAF3E;">-sb</span>
+## main...origin/main
+ <span style="color:#FCE94F;">M</span> src/app.py
+<span style="color:#EF2929;">??</span> notes.txt
+<span style="color:#8AE234;">user@host</span>:<span style="color:#729FCF;">~/myapp</span>$ <span style="color:#AD7FA8;">for</span> f <span style="color:#AD7FA8;">in</span> *.log; <span style="color:#AD7FA8;">do</span> <span style="color:#AD7FA8;">echo</span> <span style="color:#FCE94F;">"$f: $(wc -l &lt; "</span><span style="color:#34E2E2;">$f</span><span style="color:#FCE94F;">") lignes"</span>; <span style="color:#AD7FA8;">done</span>
+app.log: 1204 lignes
+error.log: <span style="color:#EF2929;">87</span> lignes
+<span style="color:#8AE234;">user@host</span>:<span style="color:#729FCF;">~/myapp</span>$ ./deploy.sh prod <span style="color:#FCAF3E;">--dry-run</span>
+<span style="color:#34E2E2;">[INFO]</span> Deploiement de myapp sur prod
+<span style="color:#FCE94F;">[WARN]</span> Mode dry-run : aucun changement applique
+<span style="color:#8AE234;">[ OK ]</span> Healthcheck</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">1.b Linux root - Shell (prompt rouge # pour les actions sensibles)</h3>
+<div data-block="term-root-sh" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #2C001E;table-layout:fixed;">
+  <tr><td style="background:#2C001E;color:#DDDDDD;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="width:90px;"></td><td style="text-align:center;color:#DDDDDD;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">root@prod-01: /etc/nginx</td><td style="text-align:right;width:90px;white-space:nowrap;color:#E95420;font-size:14px;">● ● ●</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#300A24;"><pre style="margin:0;padding:12px;background:#300A24;color:#EEEEEC;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#EF2929;">root@prod-01</span>:<span style="color:#729FCF;">/etc/nginx</span># systemctl status nginx <span style="color:#FCAF3E;">--no-pager</span>
+<span style="color:#8AE234;">●</span> nginx.service - A high performance web server
+     Active: <span style="color:#8AE234;">active (running)</span> since Tue 2026-11-10 22:14:03 CET; 2h 5min ago
+<span style="color:#EF2929;">root@prod-01</span>:<span style="color:#729FCF;">/etc/nginx</span># nginx <span style="color:#FCAF3E;">-t</span>
+nginx: configuration file /etc/nginx/nginx.conf test <span style="color:#8AE234;">is successful</span>
+<span style="color:#EF2929;">root@prod-01</span>:<span style="color:#729FCF;">/etc/nginx</span># systemctl restart nginx</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">1.c PowerShell (fond bleu classique)</h3>
+<div data-block="term-powershell" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #1F1F1F;table-layout:fixed;">
+  <tr><td style="background:#1F1F1F;color:#FFFFFF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="color:#FFFFFF;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">▮ Windows PowerShell</td><td style="text-align:right;color:#FFFFFF;font-size:12px;white-space:nowrap;width:90px;">&#8212; &nbsp; &#9744; &nbsp; &#10005;</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#012456;"><pre style="margin:0;padding:12px;background:#012456;color:#EEEDF0;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#FFFFFF;">PS </span><span style="color:#FFFFFF;">C:\Users\admin</span><span style="color:#FFFFFF;">&gt; </span><span style="color:#90EE90;">$service</span> = <span style="color:#00CED1;">'MyService'</span>
+<span style="color:#FFFFFF;">PS </span><span style="color:#FFFFFF;">C:\Users\admin</span><span style="color:#FFFFFF;">&gt; </span><span style="color:#FFFF00;">Get-Service</span> <span style="color:#A9A9A9;">-Name</span> <span style="color:#90EE90;">$service</span> | <span style="color:#FFFF00;">Select-Object</span> Name, Status, StartType
+
+Name       Status StartType
+----       ------ ---------
+MyService <span style="color:#00FF00;">Running</span> Automatic
+
+<span style="color:#FFFFFF;">PS </span><span style="color:#FFFFFF;">C:\Users\admin</span><span style="color:#FFFFFF;">&gt; </span><span style="color:#FFFF00;">Restart-Service</span> <span style="color:#A9A9A9;">-Name</span> <span style="color:#90EE90;">$service</span> <span style="color:#A9A9A9;">-Force</span> <span style="color:#A9A9A9;">-Verbose</span>
+<span style="color:#FFFF00;">VERBOSE: Performing the operation "Restart-Service" on target "MyService".</span>
+<span style="color:#FFFFFF;">PS </span><span style="color:#FFFFFF;">C:\Users\admin</span><span style="color:#FFFFFF;">&gt; </span><span style="color:#FFFF00;">Get-Process</span> | <span style="color:#FFFF00;">Sort-Object</span> CPU <span style="color:#A9A9A9;">-Descending</span> | <span style="color:#FFFF00;">Select-Object</span> <span style="color:#A9A9A9;">-First</span> <span style="color:#FFFFFF;">3</span>
+<span style="color:#FFFFFF;">PS </span><span style="color:#FFFFFF;">C:\Users\admin</span><span style="color:#FFFFFF;">&gt; </span><span style="color:#FFFF00;">Test-Path</span> C:\logs\app.log
+<span style="color:#FF5555;">False</span></pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">1.d CMD (noir)</h3>
+<div data-block="term-cmd" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #1F1F1F;table-layout:fixed;">
+  <tr><td style="background:#1F1F1F;color:#FFFFFF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="color:#FFFFFF;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">▮ C:\Windows\System32\cmd.exe</td><td style="text-align:right;color:#FFFFFF;font-size:12px;white-space:nowrap;width:90px;">&#8212; &nbsp; &#9744; &nbsp; &#10005;</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#0C0C0C;"><pre style="margin:0;padding:12px;background:#0C0C0C;color:#CCCCCC;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;">C:\Users\admin&gt; ipconfig | findstr IPv4
+   IPv4 Address. . . . . . . . . . . : <span style="color:#61D6D6;">10.12.4.27</span>
+C:\Users\admin&gt; ping <span style="color:#61D6D6;">-n</span> <span style="color:#B4009E;">2</span> <span style="color:#B4009E;">10</span>.<span style="color:#B4009E;">12</span>.<span style="color:#B4009E;">4</span>.<span style="color:#B4009E;">1</span>
+Reply from 10.12.4.1: bytes=32 time=<span style="color:#16C60C;">1ms</span> TTL=64
+Reply from 10.12.4.1: bytes=32 time=<span style="color:#16C60C;">1ms</span> TTL=64
+C:\Users\admin&gt; nslookup unknown.exemple.fr
+<span style="color:#E74856;">*** UnKnown can't find unknown.exemple.fr: Non-existent domain</span></pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">1.e macOS / zsh (thème clair Solarized)</h3>
+<div data-block="term-mac-zsh" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #D3CBB7;table-layout:fixed;">
+  <tr><td style="background:#EEE8D5;color:#657B83;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;user -- zsh -- 100x30</td></tr>
+  <tr><td style="padding:0;background:#FDF6E3;"><pre style="margin:0;padding:12px;background:#FDF6E3;color:#586E75;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#D33682;">user</span><span style="color:#93A1A1;">@</span><span style="color:#268BD2;">mbp</span> <span style="color:#CB4B16;">~/myapp</span> <span style="color:#859900;">❯ </span>brew install helm kubectl
+<span style="color:#859900;">==&gt;</span> Fetching helm
+<span style="color:#859900;">==&gt;</span> Pouring helm--3.16.2.arm64_sonoma.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/helm/3.16.2: 68 files, 52.8MB
+<span style="color:#D33682;">user</span><span style="color:#93A1A1;">@</span><span style="color:#268BD2;">mbp</span> <span style="color:#CB4B16;">~/myapp</span> <span style="color:#859900;">❯ </span>kubectl config current-context
+prod-cluster</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">1.f Git Bash (Windows)</h3>
+<div data-block="term-gitbash" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #1E1F1C;table-layout:fixed;">
+  <tr><td style="background:#1E1F1C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="color:#BFBFBF;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">▮ MINGW64:/c/Users/user/myapp</td><td style="text-align:right;color:#BFBFBF;font-size:12px;white-space:nowrap;width:90px;">&#8212; &nbsp; &#9744; &nbsp; &#10005;</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#272822;"><pre style="margin:0;padding:12px;background:#272822;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#A6E22E;">user@PC </span><span style="color:#AE81FF;">MINGW64 </span><span style="color:#E6DB74;">~/myapp </span><span style="color:#66D9EF;">(main)</span>
+$ git log <span style="color:#FD971F;">--oneline</span> -<span style="color:#AE81FF;">3</span>
+<span style="color:#E6DB74;">a1b2c3d</span> (<span style="color:#66D9EF;">HEAD -&gt; </span><span style="color:#A6E22E;">main</span>, <span style="color:#F92672;">origin/main</span>) fix: healthcheck timeout
+<span style="color:#E6DB74;">e4f5a6b</span> feat: add rollback step
+<span style="color:#E6DB74;">c7d8e9f</span> chore: bump deps</pre></td></tr>
+</table>
+</div>
+
+<h2 id="s2" style="font-size:22px;border-bottom:2px solid #0052CC;padding-bottom:6px;margin-top:40px;">2. Fichiers sources colorés (comme dans un éditeur / terminal)</h2><p style="color:#6B778C;margin-top:0;">Coloration par balises <span style="color"> : se copie/colle sans CSS externe.</p>
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.a Bash - Dracula</h3>
+<div data-block="src-bash" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #44475A;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;deploy.sh  -  Bash</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#6272A4;">#!/usr/bin/env bash</span>
+<span style="color:#FF79C6;">set</span> <span style="color:#FFB86C;">-euo</span> pipefail
+
+ENVIRONMENT=<span style="color:#F1FA8C;">"${1:-dev}"</span>
+APP=<span style="color:#F1FA8C;">"myapp"</span>
+
+log() { <span style="color:#FF79C6;">echo</span> <span style="color:#F1FA8C;">"[$(date +%H:%M:%S)] $*"</span>; }
+
+log <span style="color:#F1FA8C;">"Deploy ${APP} sur ${ENVIRONMENT}"</span>
+<span style="color:#FF79C6;">if</span> ! curl <span style="color:#FFB86C;">-fsS</span> <span style="color:#F1FA8C;">"http://localhost:8080/health"</span> &gt; /dev/null; <span style="color:#FF79C6;">then</span>
+  log <span style="color:#F1FA8C;">"healthcheck KO"</span> &gt;&amp;<span style="color:#BD93F9;">2</span>
+  <span style="color:#FF79C6;">exit</span> <span style="color:#BD93F9;">1</span>
+<span style="color:#FF79C6;">fi</span>
+<span style="color:#FF79C6;">for</span> svc <span style="color:#FF79C6;">in</span> api worker; <span style="color:#FF79C6;">do</span>
+  docker compose restart <span style="color:#F1FA8C;">"$svc"</span>
+<span style="color:#FF79C6;">done</span></pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.b Shell POSIX - Ubuntu</h3>
+<div data-block="src-sh" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #2C001E;table-layout:fixed;">
+  <tr><td style="background:#2C001E;color:#DDDDDD;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="width:90px;"></td><td style="text-align:center;color:#DDDDDD;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">backup.sh  -  sh</td><td style="text-align:right;width:90px;white-space:nowrap;color:#E95420;font-size:14px;">● ● ●</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#300A24;"><pre style="margin:0;padding:12px;background:#300A24;color:#EEEEEC;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#8F6B8A;">#!/bin/sh</span>
+<span style="color:#8F6B8A;"># Sauvegarde simple</span>
+SRC=/var/www
+DEST=/backup/www-<span style="color:#34E2E2;">$(</span>date +%F).tar.gz
+
+tar <span style="color:#FCAF3E;">-czf</span> <span style="color:#FCE94F;">"$DEST"</span> <span style="color:#FCE94F;">"$SRC"</span> &amp;&amp; <span style="color:#AD7FA8;">echo</span> <span style="color:#FCE94F;">"OK: $DEST"</span> || <span style="color:#AD7FA8;">exit</span> <span style="color:#34E2E2;">1</span>
+find /backup <span style="color:#FCAF3E;">-name</span> <span style="color:#FCE94F;">"www-*.tar.gz"</span> <span style="color:#FCAF3E;">-mtime</span> +<span style="color:#34E2E2;">7</span> <span style="color:#FCAF3E;">-delete</span></pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.c PowerShell - fond bleu</h3>
+<div data-block="src-powershell" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #1F1F1F;table-layout:fixed;">
+  <tr><td style="background:#1F1F1F;color:#FFFFFF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="color:#FFFFFF;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">▮ Start-MyService.ps1  -  PowerShell</td><td style="text-align:right;color:#FFFFFF;font-size:12px;white-space:nowrap;width:90px;">&#8212; &nbsp; &#9744; &nbsp; &#10005;</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#012456;"><pre style="margin:0;padding:12px;background:#012456;color:#EEEDF0;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#00FF00;">param</span>(
+    [Parameter(Mandatory)]<span style="color:#9FD3FF;">[string]</span><span style="color:#90EE90;">$ServiceName</span>,
+    <span style="color:#9FD3FF;">[int]</span><span style="color:#90EE90;">$TimeoutSec</span> = <span style="color:#FFFFFF;">30</span>
+)
+<span style="color:#90EE90;">$ErrorActionPreference</span> = <span style="color:#00CED1;">'Stop'</span>
+
+<span style="color:#00FF00;">try</span> {
+    <span style="color:#90EE90;">$svc</span> = <span style="color:#FFFF00;">Get-Service</span> <span style="color:#A9A9A9;">-Name</span> <span style="color:#90EE90;">$ServiceName</span>
+    <span style="color:#00FF00;">if</span> (<span style="color:#90EE90;">$svc</span>.Status <span style="color:#A9A9A9;">-ne</span> <span style="color:#00CED1;">'Running'</span>) {
+        <span style="color:#FFFF00;">Start-Service</span> <span style="color:#A9A9A9;">-Name</span> <span style="color:#90EE90;">$ServiceName</span>
+        <span style="color:#FFFF00;">Write-Host</span> <span style="color:#00CED1;">"[INFO] $ServiceName demarre"</span> <span style="color:#A9A9A9;">-ForegroundColor</span> Green
+    }
+}
+<span style="color:#00FF00;">catch</span> {
+    <span style="color:#FFFF00;">Write-Error</span> <span style="color:#00CED1;">"Echec : $($_.Exception.Message)"</span>
+    exit <span style="color:#FFFFFF;">1</span>
+}</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.d Groovy / Jenkinsfile - Dracula</h3>
+<div data-block="src-groovy" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #44475A;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;Jenkinsfile  -  Groovy</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#FF79C6;">pipeline</span> {
+    <span style="color:#FF79C6;">agent</span> { <span style="color:#50FA7B;">label</span> <span style="color:#F1FA8C;">'linux'</span> }
+    <span style="color:#FF79C6;">options</span> { <span style="color:#50FA7B;">timestamps</span>(); <span style="color:#50FA7B;">timeout</span>(time: <span style="color:#BD93F9;">30</span>, unit: <span style="color:#F1FA8C;">'MINUTES'</span>) }
+    <span style="color:#FF79C6;">environment</span> { APP_ENV = <span style="color:#F1FA8C;">'dev'</span> }
+
+    <span style="color:#FF79C6;">stages</span> {
+        <span style="color:#FF79C6;">stage</span>(<span style="color:#F1FA8C;">'Build'</span>) {
+            <span style="color:#FF79C6;">steps</span> { <span style="color:#50FA7B;">sh</span> <span style="color:#F1FA8C;">'./gradlew clean build'</span> }
+        }
+        <span style="color:#FF79C6;">stage</span>(<span style="color:#F1FA8C;">'Deploy'</span>) {
+            <span style="color:#FF79C6;">when</span> { <span style="color:#50FA7B;">branch</span> <span style="color:#F1FA8C;">'main'</span> }
+            <span style="color:#FF79C6;">steps</span> {
+                <span style="color:#50FA7B;">withCredentials</span>([<span style="color:#50FA7B;">string</span>(credentialsId: <span style="color:#F1FA8C;">'deploy-token'</span>, variable: <span style="color:#F1FA8C;">'TOKEN'</span>)]) {
+                    <span style="color:#50FA7B;">sh</span> <span style="color:#F1FA8C;">"./deploy.sh ${env.APP_ENV}"</span>
+                }
+            }
+        }
+    }
+    <span style="color:#FF79C6;">post</span> {
+        <span style="color:#FF79C6;">success</span> { <span style="color:#50FA7B;">echo</span> <span style="color:#F1FA8C;">'OK'</span> }
+        <span style="color:#FF79C6;">failure</span> { <span style="color:#50FA7B;">echo</span> <span style="color:#F1FA8C;">'Pipeline en echec'</span> }
+    }
+}</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.e Python - Monokai</h3>
+<div data-block="src-python" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #1E1F1C;table-layout:fixed;">
+  <tr><td style="background:#1E1F1C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;healthcheck.py  -  Python</td></tr>
+  <tr><td style="padding:0;background:#272822;"><pre style="margin:0;padding:12px;background:#272822;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#75715E;">#!/usr/bin/env python3</span>
+<span style="color:#F92672;">import</span> sys
+<span style="color:#F92672;">import</span> requests
+<span style="color:#F92672;">
+
+@retry</span>(times=<span style="color:#AE81FF;">3</span>)
+<span style="color:#F92672;">def</span> <span style="color:#A6E22E;">check</span>(url: str, timeout: int = <span style="color:#AE81FF;">5</span>) -&gt; bool:
+    <span style="color:#E6DB74;">"""Retourne True si le service repond 200."""</span>
+    <span style="color:#F92672;">try</span>:
+        r = requests.<span style="color:#A6E22E;">get</span>(url, timeout=timeout)
+        <span style="color:#F92672;">return</span> r.status_code == <span style="color:#AE81FF;">200</span>
+    <span style="color:#F92672;">except</span> requests.RequestException <span style="color:#F92672;">as</span> exc:
+        <span style="color:#A6E22E;">print</span>(<span style="color:#E6DB74;">f"[ERROR] {exc}"</span>, file=sys.stderr)
+        <span style="color:#F92672;">return</span> <span style="color:#F92672;">False</span>
+
+
+<span style="color:#F92672;">if</span> __name__ == <span style="color:#E6DB74;">"__main__"</span>:
+    sys.<span style="color:#A6E22E;">exit</span>(<span style="color:#AE81FF;">0</span> <span style="color:#F92672;">if</span> <span style="color:#A6E22E;">check</span>(<span style="color:#E6DB74;">"http://localhost:8080/health"</span>) <span style="color:#F92672;">else</span> <span style="color:#AE81FF;">1</span>)</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.f C - Dracula</h3>
+<div data-block="src-c" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #44475A;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;main.c  -  C</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#FFB86C;">#include</span> &lt;stdio.h&gt;
+<span style="color:#FFB86C;">#include</span> &lt;stdlib.h&gt;
+
+<span style="color:#FFB86C;">#define</span> VERSION <span style="color:#F1FA8C;">"1.0.0"</span>
+
+<span style="color:#8BE9FD;">int</span> <span style="color:#50FA7B;">main</span>(<span style="color:#8BE9FD;">int</span> argc, <span style="color:#8BE9FD;">char</span> *argv[]) {
+    <span style="color:#FF79C6;">if</span> (argc &lt; <span style="color:#BD93F9;">2</span>) {
+        <span style="color:#50FA7B;">fprintf</span>(stderr, <span style="color:#F1FA8C;">"Usage: %s &lt;name&gt;\n"</span>, argv[<span style="color:#BD93F9;">0</span>]);
+        <span style="color:#FF79C6;">return</span> EXIT_FAILURE;
+    }
+    <span style="color:#50FA7B;">printf</span>(<span style="color:#F1FA8C;">"Hello, %s! (v%s)\n"</span>, argv[<span style="color:#BD93F9;">1</span>], VERSION);
+    <span style="color:#FF79C6;">return</span> EXIT_SUCCESS;
+}</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.g Rust - Monokai</h3>
+<div data-block="src-rust" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #1E1F1C;table-layout:fixed;">
+  <tr><td style="background:#1E1F1C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;src/main.rs  -  Rust</td></tr>
+  <tr><td style="padding:0;background:#272822;"><pre style="margin:0;padding:12px;background:#272822;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#F92672;">use</span> std::env;
+<span style="color:#F92672;">use</span> std::process;
+
+#[<span style="color:#A6E22E;">derive</span>(<span style="color:#66D9EF;">Debug</span>)]
+<span style="color:#F92672;">struct</span> <span style="color:#66D9EF;">Config</span> {
+    name: <span style="color:#66D9EF;">String</span>,
+}
+
+<span style="color:#F92672;">fn</span> <span style="color:#A6E22E;">main</span>() {
+    <span style="color:#F92672;">let</span> name = env::<span style="color:#A6E22E;">args</span>().<span style="color:#A6E22E;">nth</span>(<span style="color:#AE81FF;">1</span>).<span style="color:#A6E22E;">unwrap_or_else</span>(|| {
+        <span style="color:#A6E22E;">eprintln!</span>(<span style="color:#E6DB74;">"Usage: app &lt;name&gt;"</span>);
+        process::<span style="color:#A6E22E;">exit</span>(<span style="color:#AE81FF;">1</span>);
+    });
+    <span style="color:#F92672;">let</span> cfg = <span style="color:#66D9EF;">Config</span> { name };
+    <span style="color:#A6E22E;">println!</span>(<span style="color:#E6DB74;">"Hello, {}! {:?}"</span>, cfg.name, cfg);
+}</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">2.h YAML (Ansible) - clair</h3>
+<div data-block="src-ansible" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #DFE1E6;table-layout:fixed;">
+  <tr><td style="background:#F4F5F7;color:#42526E;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;site.yml  -  Ansible</td></tr>
+  <tr><td style="padding:0;background:#FFFFFF;"><pre style="margin:0;padding:12px;background:#FFFFFF;color:#172B4D;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;">---
+<span style="color:#6554C0;">- name</span>: Deploy nginx
+<span style="color:#6554C0;">  hosts</span>: web
+<span style="color:#6554C0;">  become</span>: true
+<span style="color:#6554C0;">  vars</span>:
+<span style="color:#6554C0;">    nginx_port</span>: <span style="color:#DE350B;">8080</span>
+<span style="color:#6554C0;">  tasks</span>:
+<span style="color:#6554C0;">    - name</span>: Install nginx
+<span style="color:#6554C0;">      ansible.builtin.package</span>:
+<span style="color:#6554C0;">        name</span>: nginx
+<span style="color:#6554C0;">        state</span>: present
+<span style="color:#6554C0;">      notify</span>: Restart nginx
+
+<span style="color:#6554C0;">  handlers</span>:
+<span style="color:#6554C0;">    - name</span>: Restart nginx
+<span style="color:#6554C0;">      ansible.builtin.service</span>:
+<span style="color:#6554C0;">        name</span>: nginx
+<span style="color:#6554C0;">        state</span>: restarted</pre></td></tr>
+</table>
+</div>
+
+<h2 id="s3" style="font-size:22px;border-bottom:2px solid #0052CC;padding-bottom:6px;margin-top:40px;">3. Sorties d'outils (CI/CD, Ansible, logs, diff)</h2><p style="color:#6B778C;margin-top:0;">Sorties typiques à documenter : résultat attendu ou diagnostic d'erreur.</p>
+<h3 style="font-size:16px;margin:22px 0 6px 0;">3.a Console Jenkins (clair)</h3>
+<div data-block="out-jenkins" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #DFE1E6;table-layout:fixed;">
+  <tr><td style="background:#F4F5F7;color:#42526E;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="color:#42526E;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">▮ Console Output - myapp #142</td><td style="text-align:right;color:#42526E;font-size:12px;white-space:nowrap;width:90px;">&#8212; &nbsp; &#9744; &nbsp; &#10005;</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#FFFFFF;"><pre style="margin:0;padding:12px;background:#FFFFFF;color:#172B4D;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#6B778C;">00:10:02</span> Started by user <span style="color:#0052CC;">admin</span>
+<span style="color:#6B778C;">00:10:03</span> Running on agent <span style="color:#0052CC;">linux-01</span>
+<span style="color:#6B778C;">00:10:05</span> [Pipeline] <span style="color:#6554C0;">stage</span> (Build)
+<span style="color:#6B778C;">00:10:05</span> + ./gradlew clean build
+<span style="color:#6B778C;">00:11:41</span> BUILD <span style="color:#00875A;">SUCCESSFUL</span> in 1m 36s
+<span style="color:#6B778C;">00:11:42</span> [Pipeline] <span style="color:#6554C0;">stage</span> (Deploy)
+<span style="color:#6B778C;">00:11:50</span> <span style="color:#DE350B;">ERROR: deploy.sh exited with code 1</span>
+<span style="color:#6B778C;">00:11:50</span> Finished: <span style="color:#DE350B;">FAILURE</span></pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">3.b Ansible (PLAY RECAP)</h3>
+<div data-block="out-ansible" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #2C001E;table-layout:fixed;">
+  <tr><td style="background:#2C001E;color:#DDDDDD;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="width:90px;"></td><td style="text-align:center;color:#DDDDDD;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">ansible-playbook site.yml</td><td style="text-align:right;width:90px;white-space:nowrap;color:#E95420;font-size:14px;">● ● ●</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#300A24;"><pre style="margin:0;padding:12px;background:#300A24;color:#EEEEEC;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#34E2E2;">PLAY [Deploy nginx] ******************************************</span>
+<span style="color:#34E2E2;">TASK [Gathering Facts] ****************************************</span>
+<span style="color:#8AE234;">ok: [web-01]</span>
+<span style="color:#34E2E2;">TASK [Install nginx] ******************************************</span>
+<span style="color:#FCE94F;">changed: [web-01]</span>
+<span style="color:#34E2E2;">TASK [Deploy config] ******************************************</span>
+<span style="color:#EF2929;">fatal: [web-02]: FAILED! =&gt; {"msg": "Could not find template nginx.conf.j2"}</span>
+<span style="color:#34E2E2;">PLAY RECAP ****************************************************</span>
+web-01 : <span style="color:#8AE234;">ok=3</span>  <span style="color:#FCE94F;">changed=1</span>  unreachable=0  failed=0
+web-02 : ok=1  changed=0  unreachable=0  <span style="color:#EF2929;">failed=1</span></pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">3.c Logs applicatifs (niveaux INFO / WARN / ERROR)</h3>
+<div data-block="out-logs" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #44475A;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;docker logs -f myapp</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#6272A4;">2026-11-11 00:12:01</span> <span style="color:#50FA7B;">INFO </span> api  - Server started on :8080
+<span style="color:#6272A4;">2026-11-11 00:12:07</span> <span style="color:#50FA7B;">INFO </span> api  - GET /health 200 2ms
+<span style="color:#6272A4;">2026-11-11 00:12:19</span> <span style="color:#F1FA8C;">WARN </span> db   - Slow query (1240 ms)
+<span style="color:#6272A4;">2026-11-11 00:12:44</span> <span style="color:#FF5555;">ERROR</span> api  - java.net.ConnectException: Connection refused
+<span style="color:#6272A4;">2026-11-11 00:12:44</span> <span style="color:#FF5555;">FATAL</span> main - Shutting down</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">3.d kubectl (statuts de pods)</h3>
+<div data-block="out-kubectl" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #2C001E;table-layout:fixed;">
+  <tr><td style="background:#2C001E;color:#DDDDDD;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="width:90px;"></td><td style="text-align:center;color:#DDDDDD;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">user@host: ~</td><td style="text-align:right;width:90px;white-space:nowrap;color:#E95420;font-size:14px;">● ● ●</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#300A24;"><pre style="margin:0;padding:12px;background:#300A24;color:#EEEEEC;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#8AE234;">user@host</span>:<span style="color:#729FCF;">~</span>$ kubectl get pods -n prod
+NAME            READY   STATUS             RESTARTS   AGE
+api-7d9f-x2k4   1/1     <span style="color:#8AE234;">Running</span>            0          3d
+api-7d9f-m8p1   1/1     <span style="color:#8AE234;">Running</span>            0          3d
+worker-5c6b-q   0/1     <span style="color:#EF2929;">CrashLoopBackOff</span>   14         1h
+batch-1699-z    0/1     <span style="color:#FCE94F;">Pending</span>            0          5m</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">3.e Diff Git (+ vert / - rouge)</h3>
+<div data-block="out-diff" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #44475A;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;git diff Jenkinsfile</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#FF79C6;">@@ -12,7 +12,7 @@ stages {</span>
+     stage('Deploy') {
+<span style="color:#FF5555;">-        steps { sh './deploy.sh dev' }</span>
+<span style="color:#50FA7B;">+        steps { sh './deploy.sh ${APP_ENV}' }</span>
+     }</pre></td></tr>
+</table>
+</div>
+
+<h2 id="s4" style="font-size:22px;border-bottom:2px solid #0052CC;padding-bottom:6px;margin-top:40px;">4. Idées de présentation (états, alertes, copier-coller)</h2><p style="color:#6B778C;margin-top:0;">Blocs courts pour des cas fréquents.</p>
+<h3 style="font-size:16px;margin:22px 0 6px 0;">4.a Terminal « succès » (bordure verte)</h3>
+<div data-block="term-success" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #00875A;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;tests  -  SUCCESS</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#50FA7B;">user@host</span>:<span style="color:#8BE9FD;">~/myapp</span>$ ./run-tests.sh
+<span style="color:#50FA7B;">✔ 128 tests passed</span> in 42s</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">4.b Terminal « échec » (bordure rouge)</h3>
+<div data-block="term-failed" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #DE350B;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;tests  -  FAILED</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#50FA7B;">user@host</span>:<span style="color:#8BE9FD;">~/myapp</span>$ ./run-tests.sh
+<span style="color:#FF5555;">✘ 3 tests failed</span> (125 passed)
+<span style="color:#FF5555;">FAILED</span> test_deploy_rollback - AssertionError: expected 200, got 503</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">4.c Terminal « warning » (bordure orange)</h3>
+<div data-block="term-warning" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #FF991F;table-layout:fixed;">
+  <tr><td style="background:#21222C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;terraform  -  WARNING</td></tr>
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#50FA7B;">user@host</span>:<span style="color:#8BE9FD;">~/myapp</span>$ terraform plan
+<span style="color:#F1FA8C;">Warning: Deprecated attribute</span> on main.tf line 12
+Plan: <span style="color:#50FA7B;">2 to add</span>, <span style="color:#F1FA8C;">1 to change</span>, <span style="color:#FF5555;">1 to destroy</span>.</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">4.d Commande à copier (une ligne, sans fenêtre)</h3>
+<div data-block="cmd-oneline" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #44475A;table-layout:fixed;">
+  
+  <tr><td style="padding:0;background:#282A36;"><pre style="margin:0;padding:12px;background:#282A36;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#6272A4;">$ </span>docker compose <span style="color:#FFB86C;">-f</span> docker-compose.prod.yml up <span style="color:#FFB86C;">-d</span> <span style="color:#FFB86C;">--remove-orphans</span></pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">4.e Plusieurs étapes dans un seul terminal (commentaires pédagogiques)</h3>
+<div data-block="term-steps" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #1E1F1C;table-layout:fixed;">
+  <tr><td style="background:#1E1F1C;color:#BFBFBF;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><span style="color:#FF5F56;font-size:15px;">●</span> <span style="color:#FFBD2E;font-size:15px;">●</span> <span style="color:#27C93F;font-size:15px;">●</span>&nbsp;&nbsp;&nbsp;tutoriel  -  quick start</td></tr>
+  <tr><td style="padding:0;background:#272822;"><pre style="margin:0;padding:12px;background:#272822;color:#F8F8F2;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#75715E;"># Étape 1 - Récupérer le code</span>
+<span style="color:#A6E22E;">user@host</span>:<span style="color:#66D9EF;">~/myapp</span>$ git clone https://git.exemple.fr/myapp.git &amp;&amp; <span style="color:#F92672;">cd</span> myapp
+<span style="color:#75715E;"># Étape 2 - Construire l'image</span>
+<span style="color:#A6E22E;">user@host</span>:<span style="color:#66D9EF;">~/myapp</span>$ docker build <span style="color:#FD971F;">-t</span> myapp:<span style="color:#AE81FF;">1</span>.<span style="color:#AE81FF;">0</span> .
+<span style="color:#75715E;"># Étape 3 - Lancer</span>
+<span style="color:#A6E22E;">user@host</span>:<span style="color:#66D9EF;">~/myapp</span>$ docker run <span style="color:#FD971F;">-d</span> <span style="color:#FD971F;">-p</span> <span style="color:#AE81FF;">8080</span>:<span style="color:#AE81FF;">8080</span> <span style="color:#FD971F;">--name</span> myapp myapp:<span style="color:#AE81FF;">1</span>.<span style="color:#AE81FF;">0</span>
+<span style="color:#75715E;"># Étape 4 - Vérifier</span>
+<span style="color:#A6E22E;">user@host</span>:<span style="color:#66D9EF;">~/myapp</span>$ curl <span style="color:#FD971F;">-s</span> localhost:<span style="color:#AE81FF;">8080</span>/health
+{"status":"<span style="color:#A6E22E;">UP</span>"}</pre></td></tr>
+</table>
+</div>
+
+<h3 style="font-size:16px;margin:22px 0 6px 0;">4.f Variable à remplacer (placeholders surlignés)</h3>
+<div data-block="cmd-placeholder" style="margin:14px 0;">
+<table style="width:100%;border-collapse:collapse;border:1px solid #2C001E;table-layout:fixed;">
+  <tr><td style="background:#2C001E;color:#DDDDDD;padding:6px 12px;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;"><table style="width:100%;border-collapse:collapse;"><tr><td style="width:90px;"></td><td style="text-align:center;color:#DDDDDD;font-size:12px;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;">remplacer les valeurs surlignées</td><td style="text-align:right;width:90px;white-space:nowrap;color:#E95420;font-size:14px;">● ● ●</td></tr></table></td></tr>
+  <tr><td style="padding:0;background:#300A24;"><pre style="margin:0;padding:12px;background:#300A24;color:#EEEEEC;font-family:Consolas,Menlo,'DejaVu Sans Mono','Courier New',monospace;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-all;"><span style="color:#8F6B8A;">$ </span>ssh <span style="background:#FCE94F;color:#2E3436;padding:0 3px;">&lt;USER&gt;</span>@<span style="background:#FCE94F;color:#2E3436;padding:0 3px;">&lt;HOST&gt;</span> <span style="color:#FCAF3E;">-i</span> ~/.ssh/id_ed25519</pre></td></tr>
+</table>
+</div>
+
+</body>
+</html>
